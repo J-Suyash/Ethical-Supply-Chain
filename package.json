@@ -1,0 +1,22 @@
+{
+  "name": "ethical-supply-chain",
+  "private": true,
+  "packageManager": "bun@1.3.5",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "bun run --cwd apps/web dev",
+    "build:web": "bun run --cwd apps/web build",
+    "lint:web": "bun run --cwd apps/web lint",
+    "test:contracts": "bun run --cwd packages/contracts test",
+    "deploy:base:local": "bun run --cwd packages/contracts deploy:base:local",
+    "deploy:proposed:local": "bun run --cwd packages/contracts deploy:proposed:local",
+    "deploy:base:localhost": "bun run --cwd packages/contracts deploy:base:localhost",
+    "deploy:proposed:localhost": "bun run --cwd packages/contracts deploy:proposed:localhost",
+    "deploy:base:sepolia": "bun run --cwd packages/contracts deploy:base:sepolia",
+    "deploy:proposed:sepolia": "bun run --cwd packages/contracts deploy:proposed:sepolia",
+    "compare:gas": "bun run --cwd packages/contracts compare:gas"
+  }
+}

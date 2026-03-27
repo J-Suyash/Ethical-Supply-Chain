@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+dist
+coverage
+artifacts
+cache
+typechain-types
+.env
+.env.local
+bun.lock

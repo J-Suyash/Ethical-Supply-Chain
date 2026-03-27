@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "nextjs-react-typescript": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "computedHash": "eb995cc826bf48498e0e90969fc7dadfa2ec634002c26cfcfde565134cefa738"
+    },
+    "solidity-development": {
+      "source": "pluginagentmarketplace/custom-plugin-blockchain",
+      "sourceType": "github",
+      "computedHash": "1d54e36d9279d50a291c61e08b16f524c6729582c68e484a949fea08e36db767"
+    },
+    "solidity-security": {
+      "source": "0xlayerghost/solidity-agent-kit",
+      "sourceType": "github",
+      "computedHash": "3e7ef0166137aa5811fe9c9a3ef58073a195904471762745125d4e3ad6b4d20a"
+    },
+    "solidity-testing": {
+      "source": "0xlayerghost/solidity-agent-kit",
+      "sourceType": "github",
+      "computedHash": "6e5533e02130541d19003a67c31a0b80decdae780e1700d41d455db8b22d42af"
+    }
+  }
+}

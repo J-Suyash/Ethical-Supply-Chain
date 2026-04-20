@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/shared/site-nav";
 import { VerificationConsole } from "@/components/verify/verification-console";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Verification Console",
-  description: "Manual lookup page for base-paper and proposed supply-chain records.",
+  title: "Verify Product",
+  description: "Public verification page for the Ethical Supply Chain contract.",
 };
 
-interface VerifyPageProps {
-  searchParams?: Promise<{
-    upc?: string;
-    seed?: string;
-  }>;
-}
-
-export default async function VerifyPage({ searchParams }: VerifyPageProps) {
-  const params = (await searchParams) ?? {};
-
+export default function VerifyPage() {
   return (
-    <main className="paper-grid paper-noise min-h-screen overflow-hidden px-5 py-6 text-foreground sm:px-8 lg:px-10">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto flex w-full max-w-7xl flex-col">
         <SiteNav />
-        <VerificationConsole initialBaseUpc={params.upc} initialProductSeed={params.seed} />
+        <Suspense
+          fallback={
+            <div className="border border-line bg-panel px-6 py-12 font-data text-muted">
+              LOADING...
+            </div>
+          }
+        >
+          <VerificationConsole />
+        </Suspense>
       </div>
     </main>
   );

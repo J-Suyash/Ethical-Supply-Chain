@@ -27,6 +27,7 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
     struct Product {
         string name;
         string batchNumber;
+        string manufacturerName;
         bytes32 certificateHash;
         address currentCustodian;
         uint32 createdAt;
@@ -139,6 +140,7 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
         bytes32 certificateHash,
         string calldata name,
         string calldata batchNumber,
+        string calldata manufacturerName,
         uint32 manufacturedAt,
         uint32 expiryAt
     ) external onlyActiveRole(MANUFACTURER_ROLE) whenNotPaused {
@@ -153,13 +155,14 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
         products[productId] = Product({
             name: name,
             batchNumber: batchNumber,
+            manufacturerName: manufacturerName,
             certificateHash: certificateHash,
             currentCustodian: msg.sender,
             createdAt: uint32(block.timestamp),
             updatedAt: uint32(block.timestamp),
             manufacturedAt: manufacturedAt,
             expiryAt: expiryAt,
-            stage: uint8(ProductStage.Created),
+            stage: uint8(ProductStage.Manufactured),
             validationStatus: uint8(ValidationStatus.Pending),
             approvalCount: 0,
             rejectionCount: 0
@@ -264,6 +267,7 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
         returns (
             string memory name,
             string memory batchNumber,
+            string memory manufacturerName,
             ProductStage stage,
             ValidationStatus validationStatus,
             address currentCustodian,
@@ -279,6 +283,7 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
         return (
             product.name,
             product.batchNumber,
+            product.manufacturerName,
             ProductStage(product.stage),
             ValidationStatus(product.validationStatus),
             product.currentCustodian,
@@ -306,7 +311,7 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
     }
 
     function _requiredRoleForStage(ProductStage stage) internal pure returns (bytes32) {
-        if (stage == ProductStage.Created || stage == ProductStage.Manufactured) {
+        if (stage == ProductStage.Manufactured) {
             return MANUFACTURER_ROLE;
         }
 

@@ -41,6 +41,7 @@ export function ManufacturerTab({
   const [productSeed, setProductSeed] = useState("");
   const [productName, setProductName] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
+  const [manufacturerName, setManufacturerName] = useState("");
   const [manufacturedAt, setManufacturedAt] = useState("");
   const [expiryAt, setExpiryAt] = useState("");
   const [certificateSource, setCertificateSource] = useState("");
@@ -113,7 +114,7 @@ export function ManufacturerTab({
     await withContract(async (contract) => {
       const mfgTimestamp = Math.floor(new Date(manufacturedAt).getTime() / 1000);
       const expiryTimestamp = Math.floor(new Date(expiryAt).getTime() / 1000);
-      const tx = await contract.registerProduct(productId, certificateHash, productName, batchNumber, mfgTimestamp, expiryTimestamp);
+      const tx = await contract.registerProduct(productId, certificateHash, productName, batchNumber, manufacturerName, mfgTimestamp, expiryTimestamp);
       await tx.wait();
       onStatus(
         `Product registered: ${productSeed} → ${productId.slice(0, 18)}...`,
@@ -195,6 +196,15 @@ export function ManufacturerTab({
               value={batchNumber}
               onChange={(e) => setBatchNumber(e.target.value)}
               placeholder="e.g. BATCH-2024-001"
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">MANUFACTURER NAME</span>
+            <input
+              value={manufacturerName}
+              onChange={(e) => setManufacturerName(e.target.value)}
+              placeholder="e.g. PharmaCo Ltd."
               className="border border-line bg-panel px-3 py-2 font-data text-foreground"
             />
           </label>

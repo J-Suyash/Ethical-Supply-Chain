@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import Link from "next/link";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { contractConfig, proposedAbi } from "@/lib/contracts";
 import { STAGE_LABELS } from "@/lib/wallet";
 
-const SEPOLIA_RPC = "https://rpc.sepolia.org";
+const SEPOLIA_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
 
 interface ProductData {
   name: string;
   batchNumber: string;
+  manufacturerName: string;
   stage: number;
   validationStatus: number;
   approvalCount: number;
@@ -21,36 +22,94 @@ interface ProductData {
   expiryAt: number;
 }
 
-function StageIndicator({ currentStage }: { currentStage: number }) {
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Request timed out. Please try again.")), ms);
+    promise.then((val) => {
+      clearTimeout(timer);
+      resolve(val);
+    }).catch((err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}
+
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return "Failed to load product data.";
+  const msg = err.message.toLowerCase();
+  if (msg.includes("unknownproduct")) return "Product not found on the contract. It may not have been registered yet.";
+  if (msg.includes("timeout")) return "Network request timed out. The RPC endpoint may be slow.";
+  if (msg.includes("network")) return "Network error. Cannot connect to Sepolia RPC.";
+  return err.message;
+}
+
+function formatDate(timestamp: number): string {
+  if (!timestamp) return "—";
+  return new Date(timestamp * 1000).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function StatusBadge({ status }: { status: number }) {
+  if (status === 1) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-sm font-semibold text-emerald-700">
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+        Approved
+      </span>
+    );
+  }
+  if (status === 2) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-1.5 text-sm font-semibold text-red-700">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+        Rejected
+      </span>
+    );
+  }
   return (
-    <div className="flex items-center gap-1">
+    <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-1.5 text-sm font-semibold text-amber-700">
+      <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+      Pending Review
+    </span>
+  );
+}
+
+function StageTracker({ currentStage }: { currentStage: number }) {
+  return (
+    <div className="flex items-center justify-between">
       {STAGE_LABELS.map((label, i) => {
-        const isActive = i <= currentStage;
+        const isDone = i < currentStage;
         const isCurrent = i === currentStage;
         return (
-          <div key={label} className="flex items-center">
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold ${
-                isCurrent
-                  ? "border-accent bg-accent text-white"
-                  : isActive
-                    ? "border-accent bg-accent-soft text-accent"
-                    : "border-line-muted bg-panel-alt text-muted"
-              }`}
-            >
-              {i + 1}
+          <div key={label} className="flex flex-1 items-center">
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
+                  isCurrent
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                    : isDone
+                      ? "bg-emerald-500 text-white"
+                      : "bg-gray-100 text-gray-400"
+                }`}
+              >
+                {isDone ? "✓" : i + 1}
+              </div>
+              <span
+                className={`mt-1.5 text-[11px] font-medium ${
+                  isCurrent ? "text-blue-600" : isDone ? "text-emerald-600" : "text-gray-400"
+                }`}
+              >
+                {label}
+              </span>
             </div>
-            <span
-              className={`ml-1.5 hidden text-xs font-medium sm:inline ${
-                isCurrent ? "text-foreground" : isActive ? "text-accent" : "text-muted"
-              }`}
-            >
-              {label}
-            </span>
             {i < STAGE_LABELS.length - 1 && (
               <div
-                className={`mx-1 h-px w-4 sm:w-6 ${
-                  i < currentStage ? "bg-accent" : "bg-line-muted"
+                className={`mx-1 h-0.5 flex-1 ${
+                  i < currentStage ? "bg-emerald-400" : "bg-gray-200"
                 }`}
               />
             )}
@@ -61,44 +120,37 @@ function StageIndicator({ currentStage }: { currentStage: number }) {
   );
 }
 
-function ValidationBadge({ status }: { status: number }) {
-  if (status === 1) {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-success bg-success/10 px-3 py-1 font-data text-sm text-success">
-        <span className="inline-block h-2 w-2 rounded-full bg-success" />
-        APPROVED
-      </span>
-    );
-  }
-  if (status === 2) {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-danger bg-danger/10 px-3 py-1 font-data text-sm text-danger">
-        <span className="inline-block h-2 w-2 rounded-full bg-danger" />
-        REJECTED
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-muted bg-panel-alt px-3 py-1 font-data text-sm text-muted">
-      <span className="inline-block h-2 w-2 rounded-full bg-muted" />
-      PENDING
-    </span>
-  );
-}
+type FetchState =
+  | { status: "idle"; product: null; error: string }
+  | { status: "loading"; product: null; error: null }
+  | { status: "success"; product: ProductData; error: null }
+  | { status: "error"; product: null; error: string };
 
-function FieldRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-0.5 border-b border-line-muted py-3 last:border-b-0">
-      <span className="font-data text-[10px] tracking-widest text-muted">{label}</span>
-      <span className="text-sm font-medium text-foreground">{value || "—"}</span>
-    </div>
-  );
+type FetchAction =
+  | { type: "fetch" }
+  | { type: "success"; product: ProductData }
+  | { type: "error"; error: string };
+
+function fetchReducer(_state: FetchState, action: FetchAction): FetchState {
+  switch (action.type) {
+    case "fetch":
+      return { status: "loading", product: null, error: null };
+    case "success":
+      return { status: "success", product: action.product, error: null };
+    case "error":
+      return { status: "error", product: null, error: action.error };
+  }
 }
 
 export function ProductLanding({ seed }: { seed: string }) {
-  const [product, setProduct] = useState<ProductData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const hasSeed = Boolean(seed && contractConfig.proposedAddress);
+  const [state, dispatch] = useReducer(
+    fetchReducer,
+    hasSeed
+      ? { status: "loading" as const, product: null, error: null }
+      : { status: "idle" as const, product: null, error: "No product seed specified." },
+  );
+  const [showDetails, setShowDetails] = useState(false);
 
   const productId = useMemo(
     () => ethers.id(seed || "demo-product-001"),
@@ -106,194 +158,238 @@ export function ProductLanding({ seed }: { seed: string }) {
   );
 
   useEffect(() => {
-    if (!seed || !contractConfig.proposedAddress) {
-      setLoading(false);
-      setError("No product seed specified.");
-      return;
-    }
+    if (!seed || !contractConfig.proposedAddress) return;
 
     let cancelled = false;
+    dispatch({ type: "fetch" });
 
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const provider = new JsonRpcProvider(SEPOLIA_RPC);
-        const contract = new Contract(
-          contractConfig.proposedAddress!,
-          proposedAbi,
-          provider,
-        );
-        const summary = await contract.getProductSummary(productId);
+    const provider = new JsonRpcProvider(SEPOLIA_RPC);
+    const contract = new Contract(
+      contractConfig.proposedAddress!,
+      proposedAbi,
+      provider,
+    );
 
+    withTimeout(contract.getProductSummary(productId), 15000)
+      .then((summary) => {
         if (cancelled) return;
-
-        setProduct({
-          name: summary.name,
-          batchNumber: summary.batchNumber,
-          stage: Number(summary.stage),
-          validationStatus: Number(summary.validationStatus),
-          approvalCount: Number(summary.approvalCount),
-          rejectionCount: Number(summary.rejectionCount),
-          currentCustodian: summary.currentCustodian,
-          certificateHash: summary.certificateHash,
-          manufacturedAt: Number(summary.manufacturedAt),
-          expiryAt: Number(summary.expiryAt),
+        dispatch({
+          type: "success",
+          product: {
+            name: summary.name,
+            batchNumber: summary.batchNumber,
+            manufacturerName: summary.manufacturerName,
+            stage: Number(summary.stage),
+            validationStatus: Number(summary.validationStatus),
+            approvalCount: Number(summary.approvalCount),
+            rejectionCount: Number(summary.rejectionCount),
+            currentCustodian: summary.currentCustodian,
+            certificateHash: summary.certificateHash,
+            manufacturedAt: Number(summary.manufacturedAt),
+            expiryAt: Number(summary.expiryAt),
+          },
         });
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load product data.",
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
+      })
+      .catch((err) => {
+        if (!cancelled) dispatch({ type: "error", error: describeError(err) });
+      });
 
-    void load();
     return () => {
       cancelled = true;
     };
   }, [seed, productId]);
 
-  const formatDate = (timestamp: number) => {
-    if (!timestamp) return "—";
-    return new Date(timestamp * 1000).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const isExpired = product ? product.expiryAt * 1000 < Date.now() : false;
+  const [currentTime] = useState(() => Date.now());
+  const { product, error } = state;
+  const loading = state.status === "loading";
+  const isExpired = product ? product.expiryAt * 1000 < currentTime : false;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex w-full max-w-2xl flex-col">
-        <header className="border-b border-line px-6 py-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <Link href="/" className="font-data text-xs tracking-widest text-muted hover:text-accent">
-                ETHICAL SUPPLY CHAIN
-              </Link>
-              <h1 className="font-display mt-1 text-3xl md:text-4xl">PRODUCT VERIFICATION</h1>
-            </div>
-            <a
-              href="/verify"
-              className="border border-line bg-panel px-4 py-2 font-data text-xs text-foreground transition-colors hover:bg-panel-alt"
-            >
-              MANUAL LOOKUP
-            </a>
-          </div>
-        </header>
+    <main className="min-h-screen bg-gray-50">
+      <div className="mx-auto flex w-full max-w-lg flex-col px-4 py-6 sm:py-10">
 
-        <div className="border-b border-line bg-foreground px-6 py-3">
-          <p className="font-data text-[11px] tracking-widest text-background">
-            SEED : {seed || "—"} &nbsp;|&nbsp; ID : {productId.slice(0, 18)}...
-          </p>
+        {/* Header */}
+        <div className="text-center">
+          <Link
+            href="/"
+            className="text-xs font-medium tracking-widest text-gray-400 transition-colors hover:text-blue-600"
+          >
+            ETHICAL SUPPLY CHAIN
+          </Link>
+          <h1 className="mt-1 text-lg font-semibold text-gray-900">
+            Product Verification
+          </h1>
         </div>
 
+        {/* Loading */}
         {loading && (
-          <div className="px-6 py-16 text-center">
-            <p className="font-data text-muted">LOADING PRODUCT DATA...</p>
+          <div className="mt-16 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
+            <p className="mt-4 text-sm text-gray-500">
+              Loading product data from the blockchain...
+            </p>
           </div>
         )}
 
+        {/* Error */}
         {error && (
-          <div className="border-b border-line bg-danger/5 px-6 py-8 text-center">
-            <p className="font-data text-danger">ERROR</p>
-            <p className="mt-2 text-sm text-danger/80">{error}</p>
+          <div className="mt-12 rounded-2xl bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+              <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <h2 className="mt-4 text-base font-semibold text-gray-900">Product Not Found</h2>
+            <p className="mt-2 text-sm text-gray-500">{error}</p>
+            <Link
+              href="/verify"
+              className="mt-6 inline-block rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+            >
+              Try Manual Lookup
+            </Link>
           </div>
         )}
 
+        {/* Product Card */}
         {product && (
-          <>
-            <section className="border-b border-line px-6 py-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h2 className="font-display text-2xl md:text-4xl">
+          <div className="mt-6 space-y-4">
+
+            {/* Main Info Card */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-xl font-bold text-gray-900">
                     {product.name || "Unnamed Product"}
                   </h2>
-                  <p className="mt-1 font-data text-xs text-muted">
-                    BATCH {product.batchNumber || "—"}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <ValidationBadge status={product.validationStatus} />
-                  {isExpired && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-danger bg-danger/10 px-3 py-1 font-data text-sm text-danger">
-                      EXPIRED
-                    </span>
+                  {product.manufacturerName && (
+                    <p className="mt-0.5 text-sm text-gray-500">
+                      by {product.manufacturerName}
+                    </p>
                   )}
                 </div>
+                <StatusBadge status={product.validationStatus} />
               </div>
 
-              <div className="mt-6">
-                <p className="font-data text-[10px] tracking-widest text-muted">
-                  SUPPLY CHAIN STAGE
-                </p>
-                <div className="mt-3">
-                  <StageIndicator currentStage={product.stage} />
+              {isExpired && (
+                <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                  This product has passed its expiry date.
                 </div>
-              </div>
-            </section>
+              )}
+            </div>
 
-            <section className="border-b border-line">
-              <div className="grid md:grid-cols-2">
-                <div className="border-b border-line px-6 py-0 md:border-b-0 md:border-r">
-                  <p className="pt-3 font-data text-[10px] tracking-widest text-muted">
-                    PRODUCT DETAILS
+            {/* Key Details */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-400">Batch Number</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900">
+                    {product.batchNumber || "—"}
                   </p>
-                  <FieldRow label="MANUFACTURED" value={formatDate(product.manufacturedAt)} />
-                  <FieldRow label="EXPIRY DATE" value={formatDate(product.expiryAt)} />
-                  <FieldRow label="BATCH NUMBER" value={product.batchNumber} />
-                  <FieldRow
-                    label="CERTIFICATE HASH"
-                    value={product.certificateHash.slice(0, 18) + "..."}
-                  />
                 </div>
-                <div className="px-6 py-0">
-                  <p className="pt-3 font-data text-[10px] tracking-widest text-muted">
-                    AUTHORITY VALIDATION
+                <div>
+                  <p className="text-xs font-medium text-gray-400">Product Seed</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900">{seed}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-400">Manufactured</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900">
+                    {formatDate(product.manufacturedAt)}
                   </p>
-                  <FieldRow
-                    label="APPROVALS"
-                    value={`${product.approvalCount} authority${product.approvalCount !== 1 ? "s" : ""}`}
-                  />
-                  <FieldRow
-                    label="REJECTIONS"
-                    value={`${product.rejectionCount} authority${product.rejectionCount !== 1 ? "s" : ""}`}
-                  />
-                  <FieldRow
-                    label="CURRENT CUSTODIAN"
-                    value={`${product.currentCustodian.slice(0, 8)}...${product.currentCustodian.slice(-6)}`}
-                  />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-400">Expires</p>
+                  <p className={`mt-1 text-sm font-semibold ${isExpired ? "text-red-600" : "text-gray-900"}`}>
+                    {formatDate(product.expiryAt)}
+                  </p>
                 </div>
               </div>
-            </section>
+            </div>
 
-            <section className="px-6 py-6">
-              <div className="rounded border border-line bg-panel-alt px-4 py-3">
-                <p className="font-data text-[10px] tracking-widest text-muted">
-                  PRODUCT ID
-                </p>
-                <p className="mt-1 break-all font-mono text-xs text-foreground">
-                  {productId}
-                </p>
+            {/* Authority Validation */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900">Authority Validation</h3>
+              <div className="mt-3 flex gap-3">
+                <div className="flex-1 rounded-xl bg-emerald-50 p-3 text-center">
+                  <p className="text-2xl font-bold text-emerald-700">{product.approvalCount}</p>
+                  <p className="mt-0.5 text-xs font-medium text-emerald-600">
+                    Approval{product.approvalCount !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="flex-1 rounded-xl bg-red-50 p-3 text-center">
+                  <p className="text-2xl font-bold text-red-700">{product.rejectionCount}</p>
+                  <p className="mt-0.5 text-xs font-medium text-red-600">
+                    Rejection{product.rejectionCount !== 1 ? "s" : ""}
+                  </p>
+                </div>
               </div>
-            </section>
-          </>
+            </div>
+
+            {/* Supply Chain Stage */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900">Supply Chain Stage</h3>
+              <div className="mt-4">
+                <StageTracker currentStage={product.stage} />
+              </div>
+            </div>
+
+            {/* Collapsible Technical Details */}
+            <div className="rounded-2xl bg-white shadow-sm">
+              <button
+                type="button"
+                onClick={() => setShowDetails(!showDetails)}
+                className="flex w-full items-center justify-between px-6 py-4 text-left"
+              >
+                <span className="text-sm font-semibold text-gray-900">Technical Details</span>
+                <svg
+                  className={`h-5 w-5 text-gray-400 transition-transform ${showDetails ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              {showDetails && (
+                <div className="border-t border-gray-100 px-6 pb-5 pt-4">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-gray-400">Product ID</p>
+                      <p className="mt-1 break-all font-mono text-xs text-gray-600">{productId}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-400">Certificate Hash</p>
+                      <p className="mt-1 break-all font-mono text-xs text-gray-600">{product.certificateHash}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-400">Current Custodian</p>
+                      <p className="mt-1 break-all font-mono text-xs text-gray-600">{product.currentCustodian}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-400">Network</p>
+                      <p className="mt-1 text-xs text-gray-600">Sepolia Testnet (Chain 11155111)</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Note */}
+            <p className="px-2 text-center text-xs text-gray-400">
+              Data read directly from the Ethereum blockchain. No wallet required.
+            </p>
+          </div>
         )}
 
-        <footer className="border-t border-line px-6 py-6">
-          <div className="flex items-center justify-between">
-            <span className="font-data text-xs text-muted">
-              SEPOLIA : CHAIN 11155111
-            </span>
-            <span className="font-data text-xs text-muted">ESC V1</span>
-          </div>
-        </footer>
+        {/* Bottom Nav */}
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/verify"
+            className="text-sm font-medium text-gray-500 transition-colors hover:text-blue-600"
+          >
+            Manual Lookup →
+          </Link>
+        </div>
       </div>
     </main>
   );

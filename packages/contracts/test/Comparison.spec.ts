@@ -25,8 +25,7 @@ describe("Base vs Proposed Comparison", function () {
     await proposed.registerActor(authorityRole, authorityTwo.address);
 
     const productId = ethers.id("compare-product");
-    await proposed.connect(manufacturer).registerProduct(productId, ethers.id("ipfs://compare-proof"), "Compare Med", "BATCH-CMP", 1700000000n, 1800000000n);
-    await proposed.connect(manufacturer).advanceStage(productId, manufacturer.address);
+    await proposed.connect(manufacturer).registerProduct(productId, ethers.id("ipfs://compare-proof"), "Compare Med", "BATCH-CMP", "PharmaCo Ltd.", 1700000000n, 1800000000n);
 
     await expect(proposed.connect(manufacturer).advanceStage(productId, distributor.address)).to.be.revertedWithCustomError(
       proposed,

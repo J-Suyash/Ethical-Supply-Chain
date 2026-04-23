@@ -32,11 +32,12 @@ async function main() {
 
   const productId = ethers.id("gas-product");
   const certificateHash = ethers.id("gas-proof");
-  const proposedRegister = await proposed.connect(manufacturer).registerProduct.estimateGas(productId, certificateHash);
-  await (await proposed.connect(manufacturer).registerProduct(productId, certificateHash)).wait();
-  const proposedAdvanceManufactured = await proposed.connect(manufacturer).advanceStage.estimateGas(productId, manufacturer.address);
-  await (await proposed.connect(manufacturer).advanceStage(productId, manufacturer.address)).wait();
+  const proposedRegister = await proposed.connect(manufacturer).registerProduct.estimateGas(productId, certificateHash, "GasMed", "BATCH-GAS", "GasCo", 1700000000n, 1800000000n);
+  await (await proposed.connect(manufacturer).registerProduct(productId, certificateHash, "GasMed", "BATCH-GAS", "GasCo", 1700000000n, 1800000000n)).wait();
   const proposedApprove = await proposed.connect(authorityOne).approveProduct.estimateGas(productId);
+  await (await proposed.connect(authorityOne).approveProduct(productId)).wait();
+  const proposedAdvanceManufactured = await proposed.connect(manufacturer).advanceStage.estimateGas(productId, distributor.address);
+  await (await proposed.connect(manufacturer).advanceStage(productId, distributor.address)).wait();
 
   console.log("Gas comparison snapshot");
   console.table([

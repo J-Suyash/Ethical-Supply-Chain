@@ -40,6 +40,7 @@ export function WalletConsole() {
   const [productSeed, setProductSeed] = useState("demo-product-001");
   const [productName, setProductName] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
+  const [manufacturerName, setManufacturerName] = useState("");
   const [manufacturedAt, setManufacturedAt] = useState("");
   const [expiryAt, setExpiryAt] = useState("");
   const [certificateSource, setCertificateSource] = useState("demo-certificate");
@@ -248,6 +249,15 @@ export function WalletConsole() {
             />
           </label>
           <label className="grid gap-1">
+            <span className="font-data text-muted">MANUFACTURER NAME</span>
+            <input
+              value={manufacturerName}
+              onChange={(e) => setManufacturerName(e.target.value)}
+              placeholder="e.g. PharmaCo Ltd."
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
             <span className="font-data text-muted">MANUFACTURING DATE</span>
             <input
               type="date"
@@ -310,7 +320,7 @@ export function WalletConsole() {
                 }
                 const mfgTimestamp = Math.floor(new Date(manufacturedAt).getTime() / 1000);
                 const expiryTimestamp = Math.floor(new Date(expiryAt).getTime() / 1000);
-                const tx = await contract.registerProduct(productId, certificateHash, productName, batchNumber, mfgTimestamp, expiryTimestamp);
+                const tx = await contract.registerProduct(productId, certificateHash, productName, batchNumber, manufacturerName, mfgTimestamp, expiryTimestamp);
                 await tx.wait();
                 setStatus(`Product registered with id ${productId}.`);
               })

@@ -66,8 +66,14 @@ describe("EthicalSupplyChain", function () {
 
     const productId = ethers.id("product-001");
     const certificateHash = ethers.id("ipfs://certificate-001");
+    const name = "Aspirin 500mg";
+    const batchNumber = "BATCH-2024-001";
+    const manufacturedAt = 1700000000n;
+    const expiryAt = 1800000000n;
 
-    await expect(contract.connect(manufacturer).registerProduct(productId, certificateHash))
+    await expect(
+      contract.connect(manufacturer).registerProduct(productId, certificateHash, name, batchNumber, manufacturedAt, expiryAt),
+    )
       .to.emit(contract, "ProductRegistered")
       .withArgs(productId, manufacturer.address, certificateHash);
 
@@ -87,10 +93,14 @@ describe("EthicalSupplyChain", function () {
 
     const summary = await contract.getProductSummary(productId);
 
+    expect(summary.name).to.equal(name);
+    expect(summary.batchNumber).to.equal(batchNumber);
     expect(summary.stage).to.equal(4n);
     expect(summary.validationStatus).to.equal(1n);
     expect(summary.currentCustodian).to.equal(retailer.address);
     expect(summary.approvalCount).to.equal(2n);
+    expect(summary.manufacturedAt).to.equal(manufacturedAt);
+    expect(summary.expiryAt).to.equal(expiryAt);
   });
 
   it("blocks duplicate or mixed votes from the same authority", async function () {
@@ -98,7 +108,7 @@ describe("EthicalSupplyChain", function () {
 
     const productId = ethers.id("product-002");
 
-    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-002"));
+    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-002"), "Paracetamol", "BATCH-002", 1700000000n, 1800000000n);
     await contract.connect(authorityOne).approveProduct(productId);
 
     await expect(contract.connect(authorityOne).approveProduct(productId)).to.be.revertedWithCustomError(
@@ -117,7 +127,7 @@ describe("EthicalSupplyChain", function () {
 
     const productId = ethers.id("product-003");
 
-    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-003"));
+    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-003"), "Ibuprofen", "BATCH-003", 1700000000n, 1800000000n);
     await contract.connect(authorityOne).approveProduct(productId);
     await contract.connect(authorityTwo).approveProduct(productId);
 
@@ -137,7 +147,7 @@ describe("EthicalSupplyChain", function () {
 
     const productId = ethers.id("product-004");
 
-    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-004"));
+    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-004"), "Amoxicillin", "BATCH-004", 1700000000n, 1800000000n);
     await contract.connect(manufacturer).advanceStage(productId, manufacturer.address);
     await contract.connect(authorityOne).rejectProduct(productId);
     await contract.connect(authorityTwo).rejectProduct(productId);
@@ -160,12 +170,12 @@ describe("EthicalSupplyChain", function () {
     await contract.setBlacklist(manufacturer.address, true);
 
     await expect(
-      contract.connect(manufacturer).registerProduct(registrationProductId, ethers.id("proof-005")),
+      contract.connect(manufacturer).registerProduct(registrationProductId, ethers.id("proof-005"), "Omeprazole", "BATCH-005", 1700000000n, 1800000000n),
     ).to.be.revertedWithCustomError(contract, "AccountBlacklisted");
 
     const validationProductId = ethers.id("product-006");
     await contract.setBlacklist(manufacturer.address, false);
-    await contract.connect(manufacturer).registerProduct(validationProductId, ethers.id("proof-006"));
+    await contract.connect(manufacturer).registerProduct(validationProductId, ethers.id("proof-006"), "Lisinopril", "BATCH-006", 1700000000n, 1800000000n);
     await contract.setBlacklist(authorityOne.address, true);
 
     await expect(contract.connect(authorityOne).approveProduct(validationProductId)).to.be.revertedWithCustomError(
@@ -178,7 +188,7 @@ describe("EthicalSupplyChain", function () {
     const { contract, manufacturer } = await deployFixture();
 
     const productId = ethers.id("product-blacklisted-stage");
-    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-blacklisted-stage"));
+    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-blacklisted-stage"), "Metformin", "BATCH-BL", 1700000000n, 1800000000n);
     await contract.setBlacklist(manufacturer.address, true);
 
     await expect(contract.connect(manufacturer).advanceStage(productId, manufacturer.address)).to.be.revertedWithCustomError(
@@ -192,7 +202,7 @@ describe("EthicalSupplyChain", function () {
 
     const productId = ethers.id("product-007");
 
-    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-007"));
+    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-007"), "Atorvastatin", "BATCH-007", 1700000000n, 1800000000n);
 
     await expect(contract.connect(manufacturerTwo).advanceStage(productId, distributor.address)).to.be.revertedWithCustomError(
       contract,
@@ -210,7 +220,7 @@ describe("EthicalSupplyChain", function () {
 
     const productId = ethers.id("product-008");
 
-    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-008"));
+    await contract.connect(manufacturer).registerProduct(productId, ethers.id("proof-008"), "Losartan", "BATCH-008", 1700000000n, 1800000000n);
     await expect(contract.connect(manufacturer).advanceStage(productId, retailer.address)).to.be.revertedWithCustomError(
       contract,
       "InvalidNextCustodian",
@@ -261,11 +271,11 @@ describe("EthicalSupplyChain", function () {
     await contract.pause();
 
     await expect(
-      contract.connect(manufacturer).registerProduct(ethers.id("paused-product"), ethers.id("paused-proof")),
+      contract.connect(manufacturer).registerProduct(ethers.id("paused-product"), ethers.id("paused-proof"), "Paused Med", "BATCH-PAUSE", 1700000000n, 1800000000n),
     ).to.be.revertedWith("Pausable: paused");
 
     await contract.unpause();
-    await contract.connect(manufacturer).registerProduct(ethers.id("paused-product"), ethers.id("paused-proof"));
+    await contract.connect(manufacturer).registerProduct(ethers.id("paused-product"), ethers.id("paused-proof"), "Paused Med", "BATCH-PAUSE", 1700000000n, 1800000000n);
     await expect(contract.connect(authorityOne).approveProduct(ethers.id("paused-product"))).to.not.be.reverted;
   });
 
@@ -273,7 +283,7 @@ describe("EthicalSupplyChain", function () {
     const { contract, manufacturer, authorityOne } = await deployFixture();
 
     await expect(
-      contract.connect(manufacturer).registerProduct(ethers.ZeroHash, ethers.id("proof-zero")),
+      contract.connect(manufacturer).registerProduct(ethers.ZeroHash, ethers.id("proof-zero"), "Zero Med", "BATCH-ZERO", 1700000000n, 1800000000n),
     ).to.be.revertedWithCustomError(contract, "InvalidProductId");
 
     await expect(contract.connect(authorityOne).approveProduct(ethers.id("missing-product"))).to.be.revertedWithCustomError(

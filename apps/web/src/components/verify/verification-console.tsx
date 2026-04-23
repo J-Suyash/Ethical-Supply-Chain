@@ -49,12 +49,16 @@ export function VerificationConsole() {
 
       setProposedResult({
         productId,
+        name: summary.name,
+        batchNumber: summary.batchNumber,
         stage: summary.stage.toString(),
         validationStatus: summary.validationStatus.toString(),
         currentCustodian: summary.currentCustodian,
         approvalCount: summary.approvalCount.toString(),
         rejectionCount: summary.rejectionCount.toString(),
         certificateHash: summary.certificateHash,
+        manufacturedAt: new Date(Number(summary.manufacturedAt) * 1000).toLocaleDateString(),
+        expiryAt: new Date(Number(summary.expiryAt) * 1000).toLocaleDateString(),
       });
       setStatus(`Loaded product ${productSeed}.`);
     } catch (error) {

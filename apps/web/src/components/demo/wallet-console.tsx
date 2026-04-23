@@ -17,12 +17,16 @@ interface UploadResult {
 }
 
 interface ProposedProductSnapshot {
+  name: string;
+  batchNumber: string;
   stage: string;
   validationStatus: string;
   currentCustodian: string;
   approvalCount: string;
   rejectionCount: string;
   certificateHash: string;
+  manufacturedAt: string;
+  expiryAt: string;
 }
 
 export function WalletConsole() {
@@ -34,6 +38,10 @@ export function WalletConsole() {
   const [isWorking, setIsWorking] = useState(false);
 
   const [productSeed, setProductSeed] = useState("demo-product-001");
+  const [productName, setProductName] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [manufacturedAt, setManufacturedAt] = useState("");
+  const [expiryAt, setExpiryAt] = useState("");
   const [certificateSource, setCertificateSource] = useState("demo-certificate");
   const [nextCustodian, setNextCustodian] = useState("");
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
@@ -148,12 +156,16 @@ export function WalletConsole() {
     await withProposedContract(async (contract) => {
       const summary = await contract.getProductSummary(productId);
       setProposedSnapshot({
+        name: summary.name,
+        batchNumber: summary.batchNumber,
         stage: summary.stage.toString(),
         validationStatus: summary.validationStatus.toString(),
         currentCustodian: summary.currentCustodian,
         approvalCount: summary.approvalCount.toString(),
         rejectionCount: summary.rejectionCount.toString(),
         certificateHash: summary.certificateHash,
+        manufacturedAt: new Date(Number(summary.manufacturedAt) * 1000).toLocaleString(),
+        expiryAt: new Date(Number(summary.expiryAt) * 1000).toLocaleString(),
       });
       setStatus(`Product ${productId} summary loaded.`);
     });
@@ -218,6 +230,42 @@ export function WalletConsole() {
             />
           </label>
           <label className="grid gap-1">
+            <span className="font-data text-muted">PRODUCT NAME</span>
+            <input
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+              placeholder="e.g. Aspirin 500mg"
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">BATCH NUMBER</span>
+            <input
+              value={batchNumber}
+              onChange={(e) => setBatchNumber(e.target.value)}
+              placeholder="e.g. BATCH-2024-001"
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">MANUFACTURING DATE</span>
+            <input
+              type="date"
+              value={manufacturedAt}
+              onChange={(e) => setManufacturedAt(e.target.value)}
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">EXPIRY DATE</span>
+            <input
+              type="date"
+              value={expiryAt}
+              onChange={(e) => setExpiryAt(e.target.value)}
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
             <span className="font-data text-muted">CERTIFICATE SOURCE OR CID</span>
             <input
               value={certificateSource}
@@ -256,7 +304,13 @@ export function WalletConsole() {
             disabled={isWorking}
             onClick={() =>
               withProposedContract(async (contract) => {
-                const tx = await contract.registerProduct(productId, certificateHash);
+                if (!productName || !batchNumber || !manufacturedAt || !expiryAt) {
+                  setStatus("Fill in name, batch number, mfg date, and expiry date.");
+                  return;
+                }
+                const mfgTimestamp = Math.floor(new Date(manufacturedAt).getTime() / 1000);
+                const expiryTimestamp = Math.floor(new Date(expiryAt).getTime() / 1000);
+                const tx = await contract.registerProduct(productId, certificateHash, productName, batchNumber, mfgTimestamp, expiryTimestamp);
                 await tx.wait();
                 setStatus(`Product registered with id ${productId}.`);
               })
@@ -327,6 +381,14 @@ export function WalletConsole() {
           <div className="mt-4 border border-line bg-panel-alt p-4">
             <div className="grid gap-1 font-data text-sm">
               <p>
+                <span className="text-muted">NAME :</span>{" "}
+                <span className="text-foreground">{proposedSnapshot.name}</span>
+              </p>
+              <p>
+                <span className="text-muted">BATCH :</span>{" "}
+                <span className="text-foreground">{proposedSnapshot.batchNumber}</span>
+              </p>
+              <p>
                 <span className="text-muted">STAGE :</span>{" "}
                 <span className="text-foreground">{proposedSnapshot.stage}</span>
               </p>
@@ -353,6 +415,14 @@ export function WalletConsole() {
                 <span className="text-foreground">
                   {proposedSnapshot.currentCustodian}
                 </span>
+              </p>
+              <p>
+                <span className="text-muted">MFG DATE :</span>{" "}
+                <span className="text-foreground">{proposedSnapshot.manufacturedAt}</span>
+              </p>
+              <p>
+                <span className="text-muted">EXPIRY :</span>{" "}
+                <span className="text-foreground">{proposedSnapshot.expiryAt}</span>
               </p>
             </div>
           </div>

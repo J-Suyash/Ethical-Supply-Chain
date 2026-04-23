@@ -18,6 +18,8 @@ interface ManufacturerTabProps {
 }
 
 interface ProductSnapshot {
+  name: string;
+  batchNumber: string;
   stage: string;
   validationStatus: string;
   currentCustodian: string;
@@ -26,6 +28,8 @@ interface ProductSnapshot {
   certificateHash: string;
   createdAt: string;
   updatedAt: string;
+  manufacturedAt: string;
+  expiryAt: string;
 }
 
 export function ManufacturerTab({
@@ -35,6 +39,10 @@ export function ManufacturerTab({
 }: ManufacturerTabProps) {
   const [isWorking, setIsWorking] = useState(false);
   const [productSeed, setProductSeed] = useState("");
+  const [productName, setProductName] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [manufacturedAt, setManufacturedAt] = useState("");
+  const [expiryAt, setExpiryAt] = useState("");
   const [certificateSource, setCertificateSource] = useState("");
   const [nextCustodian, setNextCustodian] = useState("");
   const [snapshot, setSnapshot] = useState<ProductSnapshot | null>(null);
@@ -98,12 +106,14 @@ export function ManufacturerTab({
   }
 
   async function registerProduct() {
-    if (!productId || !certificateHash) {
-      onStatus("Enter a product seed and certificate source.");
+    if (!productId || !certificateHash || !productName || !batchNumber || !manufacturedAt || !expiryAt) {
+      onStatus("Enter a product seed, certificate source, name, batch number, mfg date, and expiry date.");
       return;
     }
     await withContract(async (contract) => {
-      const tx = await contract.registerProduct(productId, certificateHash);
+      const mfgTimestamp = Math.floor(new Date(manufacturedAt).getTime() / 1000);
+      const expiryTimestamp = Math.floor(new Date(expiryAt).getTime() / 1000);
+      const tx = await contract.registerProduct(productId, certificateHash, productName, batchNumber, mfgTimestamp, expiryTimestamp);
       await tx.wait();
       onStatus(
         `Product registered: ${productSeed} → ${productId.slice(0, 18)}...`,
@@ -132,6 +142,8 @@ export function ManufacturerTab({
     await withContract(async (contract) => {
       const p = await contract.getProduct(productId);
       setSnapshot({
+        name: p.name,
+        batchNumber: p.batchNumber,
         stage: STAGE_LABELS[Number(p.stage)] ?? String(p.stage),
         validationStatus:
           VALIDATION_LABELS[Number(p.validationStatus)] ??
@@ -142,6 +154,8 @@ export function ManufacturerTab({
         certificateHash: p.certificateHash,
         createdAt: new Date(Number(p.createdAt) * 1000).toLocaleString(),
         updatedAt: new Date(Number(p.updatedAt) * 1000).toLocaleString(),
+        manufacturedAt: new Date(Number(p.manufacturedAt) * 1000).toLocaleString(),
+        expiryAt: new Date(Number(p.expiryAt) * 1000).toLocaleString(),
       });
       onStatus(`Loaded product: ${productSeed}`);
     });
@@ -163,6 +177,42 @@ export function ManufacturerTab({
               value={productSeed}
               onChange={(e) => setProductSeed(e.target.value)}
               placeholder="e.g. batch-2024-001"
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">PRODUCT NAME</span>
+            <input
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+              placeholder="e.g. Aspirin 500mg"
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">BATCH NUMBER</span>
+            <input
+              value={batchNumber}
+              onChange={(e) => setBatchNumber(e.target.value)}
+              placeholder="e.g. BATCH-2024-001"
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">MANUFACTURING DATE</span>
+            <input
+              type="date"
+              value={manufacturedAt}
+              onChange={(e) => setManufacturedAt(e.target.value)}
+              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="font-data text-muted">EXPIRY DATE</span>
+            <input
+              type="date"
+              value={expiryAt}
+              onChange={(e) => setExpiryAt(e.target.value)}
               className="border border-line bg-panel px-3 py-2 font-data text-foreground"
             />
           </label>
@@ -255,6 +305,14 @@ export function ManufacturerTab({
           <div className="mt-4 border border-line bg-panel-alt p-4">
             <div className="grid gap-1 font-data text-sm">
               <p>
+                <span className="text-muted">NAME :</span>{" "}
+                <span className="text-foreground">{snapshot.name}</span>
+              </p>
+              <p>
+                <span className="text-muted">BATCH :</span>{" "}
+                <span className="text-foreground">{snapshot.batchNumber}</span>
+              </p>
+              <p>
                 <span className="text-muted">STAGE :</span>{" "}
                 <span className="text-foreground">{snapshot.stage}</span>
               </p>
@@ -279,6 +337,14 @@ export function ManufacturerTab({
                 <span className="text-foreground">
                   {snapshot.currentCustodian}
                 </span>
+              </p>
+              <p>
+                <span className="text-muted">MFG DATE :</span>{" "}
+                <span className="text-foreground">{snapshot.manufacturedAt}</span>
+              </p>
+              <p>
+                <span className="text-muted">EXPIRY :</span>{" "}
+                <span className="text-foreground">{snapshot.expiryAt}</span>
               </p>
               <p>
                 <span className="text-muted">CREATED :</span>{" "}

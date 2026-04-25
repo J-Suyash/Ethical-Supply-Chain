@@ -98,7 +98,7 @@ export function ManufacturerTab({
       if (!response.ok) throw new Error(payload.error || "IPFS upload failed.");
       setUploadedCid(payload.cid);
       setCertificateSource(payload.cid);
-      onStatus(`Uploaded. CID: ${payload.cid}`);
+      onStatus(`File uploaded successfully. CID: ${payload.cid}`);
     } catch (error) {
       onStatus(error instanceof Error ? error.message : "Upload failed.");
     } finally {
@@ -108,7 +108,7 @@ export function ManufacturerTab({
 
   async function registerProduct() {
     if (!productId || !certificateHash || !productName || !batchNumber || !manufacturedAt || !expiryAt) {
-      onStatus("Enter a product seed, certificate source, name, batch number, mfg date, and expiry date.");
+      onStatus("Please fill in all required fields: product seed, certificate source, name, batch number, manufacturing date, and expiry date.");
       return;
     }
     await withContract(async (contract) => {
@@ -117,7 +117,7 @@ export function ManufacturerTab({
       const tx = await contract.registerProduct(productId, certificateHash, productName, batchNumber, manufacturerName, mfgTimestamp, expiryTimestamp);
       await tx.wait();
       onStatus(
-        `Product registered: ${productSeed} → ${productId.slice(0, 18)}...`,
+        `Product registered successfully: ${productSeed}`,
       );
     });
   }
@@ -131,7 +131,7 @@ export function ManufacturerTab({
       const custodian = nextCustodian || account || ethers.ZeroAddress;
       const tx = await contract.advanceStage(productId, custodian);
       await tx.wait();
-      onStatus(`Advanced product ${productSeed} to next stage.`);
+      onStatus(`Product ${productSeed} advanced to next stage.`);
     });
   }
 
@@ -158,213 +158,189 @@ export function ManufacturerTab({
         manufacturedAt: new Date(Number(p.manufacturedAt) * 1000).toLocaleString(),
         expiryAt: new Date(Number(p.expiryAt) * 1000).toLocaleString(),
       });
-      onStatus(`Loaded product: ${productSeed}`);
+      onStatus(`Product data loaded: ${productSeed}`);
     });
   }
 
   return (
-    <div className="grid gap-px border border-line bg-line xl:grid-cols-2">
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">REGISTER PRODUCT</p>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div className="govt-card">
+        <div className="govt-card-header">Register New Product</div>
         {!hasRole && (
-          <p className="mt-2 font-data text-danger">
+          <p className="text-sm text-govt-red font-bold mb-3">
             NO MANUFACTURER ROLE DETECTED
           </p>
         )}
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="font-data text-muted">PRODUCT SEED</span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="govt-form-group">
+            <label htmlFor="mfgProductSeed">Product Identification Seed</label>
             <input
+              id="mfgProductSeed"
               value={productSeed}
               onChange={(e) => setProductSeed(e.target.value)}
               placeholder="e.g. batch-2024-001"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">PRODUCT NAME</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="mfgProductName">Product Name</label>
             <input
+              id="mfgProductName"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
               placeholder="e.g. Aspirin 500mg"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">BATCH NUMBER</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="mfgBatchNumber">Batch Number</label>
             <input
+              id="mfgBatchNumber"
               value={batchNumber}
               onChange={(e) => setBatchNumber(e.target.value)}
               placeholder="e.g. BATCH-2024-001"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">MANUFACTURER NAME</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="mfgManufacturerName">Manufacturer Name</label>
             <input
+              id="mfgManufacturerName"
               value={manufacturerName}
               onChange={(e) => setManufacturerName(e.target.value)}
               placeholder="e.g. PharmaCo Ltd."
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">MANUFACTURING DATE</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="mfgManufacturedAt">Manufacturing Date</label>
             <input
+              id="mfgManufacturedAt"
               type="date"
               value={manufacturedAt}
               onChange={(e) => setManufacturedAt(e.target.value)}
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">EXPIRY DATE</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="mfgExpiryAt">Expiry Date</label>
             <input
+              id="mfgExpiryAt"
               type="date"
               value={expiryAt}
               onChange={(e) => setExpiryAt(e.target.value)}
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">CERTIFICATE SOURCE OR CID</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="mfgCertificateSource">Certificate Source / CID</label>
             <input
+              id="mfgCertificateSource"
               value={certificateSource}
               onChange={(e) => setCertificateSource(e.target.value)}
               placeholder="Manual CID or text"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">UPLOAD CERTIFICATE TO IPFS</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="mfgFileUpload">Upload Certificate to IPFS</label>
             <input
+              id="mfgFileUpload"
               type="file"
               onChange={(e) =>
                 void uploadCertificate(e.target.files?.[0] ?? null)
               }
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          {productId && (
-            <div className="border border-line-muted bg-panel-alt px-3 py-2">
-              <p className="break-all font-data text-muted">ID : {productId}</p>
-              {certificateHash && (
-                <p className="break-all font-data text-muted">
-                  CERT : {certificateHash}
-                </p>
-              )}
-              {uploadedCid && (
-                <p className="break-all font-data text-muted">
-                  CID : {uploadedCid}
-                </p>
-              )}
-            </div>
-          )}
+          </div>
         </div>
+        {productId && (
+          <div className="bg-govt-gray-light border border-govt-border p-3 mt-3">
+            <p className="text-xs font-mono break-all">
+              <span className="font-bold">Product ID:</span> {productId}
+            </p>
+            {certificateHash && (
+              <p className="text-xs font-mono break-all mt-1">
+                <span className="font-bold">Certificate Hash:</span> {certificateHash}
+              </p>
+            )}
+            {uploadedCid && (
+              <p className="text-xs font-mono break-all mt-1">
+                <span className="font-bold">IPFS CID:</span> {uploadedCid}
+              </p>
+            )}
+          </div>
+        )}
         <button
           type="button"
           disabled={disabled}
           onClick={registerProduct}
-          className="mt-4 border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
+          className="govt-btn govt-btn-primary mt-4"
         >
-          REGISTER PRODUCT
+          Register Product
         </button>
       </div>
 
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">ADVANCE STAGE</p>
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="font-data text-muted">PRODUCT SEED</span>
+      <div className="govt-card">
+        <div className="govt-card-header">Advance Product Stage</div>
+        <div className="grid gap-3">
+          <div className="govt-form-group">
+            <label htmlFor="advProductSeed">Product Identification Seed</label>
             <input
+              id="advProductSeed"
               value={productSeed}
               onChange={(e) => setProductSeed(e.target.value)}
-              placeholder="same seed as registration"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              placeholder="Same seed as registration"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">NEXT CUSTODIAN ADDRESS</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="advNextCustodian">Next Custodian Address</label>
             <input
+              id="advNextCustodian"
               value={nextCustodian}
               onChange={(e) => setNextCustodian(e.target.value)}
               placeholder="0x... (leave empty for self)"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
+          </div>
         </div>
         <div className="mt-4 flex gap-2">
           <button
             type="button"
             disabled={disabled}
             onClick={advanceStage}
-            className="border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
+            className="govt-btn govt-btn-primary"
           >
-            ADVANCE
+            Advance Stage
           </button>
           <button
             type="button"
             disabled={!account || isWorking}
             onClick={readProduct}
-            className="border border-line bg-panel px-4 py-2 font-data text-foreground disabled:opacity-50"
+            className="govt-btn govt-btn-secondary"
           >
-            READ PRODUCT
+            Read Product
           </button>
         </div>
         {snapshot && (
-          <div className="mt-4 border border-line bg-panel-alt p-4">
-            <div className="grid gap-1 font-data text-sm">
-              <p>
-                <span className="text-muted">NAME :</span>{" "}
-                <span className="text-foreground">{snapshot.name}</span>
-              </p>
-              <p>
-                <span className="text-muted">BATCH :</span>{" "}
-                <span className="text-foreground">{snapshot.batchNumber}</span>
-              </p>
-              <p>
-                <span className="text-muted">STAGE :</span>{" "}
-                <span className="text-foreground">{snapshot.stage}</span>
-              </p>
-              <p>
-                <span className="text-muted">VALIDATION :</span>{" "}
-                <span className="text-foreground">
-                  {snapshot.validationStatus}
-                </span>
-              </p>
-              <p>
-                <span className="text-muted">APPROVALS :</span>{" "}
-                <span className="text-foreground">{snapshot.approvalCount}</span>
-              </p>
-              <p>
-                <span className="text-muted">REJECTIONS :</span>{" "}
-                <span className="text-foreground">
-                  {snapshot.rejectionCount}
-                </span>
-              </p>
-              <p>
-                <span className="text-muted">CUSTODIAN :</span>{" "}
-                <span className="text-foreground">
-                  {snapshot.currentCustodian}
-                </span>
-              </p>
-              <p>
-                <span className="text-muted">MFG DATE :</span>{" "}
-                <span className="text-foreground">{snapshot.manufacturedAt}</span>
-              </p>
-              <p>
-                <span className="text-muted">EXPIRY :</span>{" "}
-                <span className="text-foreground">{snapshot.expiryAt}</span>
-              </p>
-              <p>
-                <span className="text-muted">CREATED :</span>{" "}
-                <span className="text-foreground">{snapshot.createdAt}</span>
-              </p>
-              <p>
-                <span className="text-muted">UPDATED :</span>{" "}
-                <span className="text-foreground">{snapshot.updatedAt}</span>
-              </p>
-            </div>
+          <div className="mt-4 border border-govt-border bg-govt-gray-light">
+            <p className="bg-govt-blue text-white px-3 py-2 text-sm font-bold">Product Record</p>
+            <table className="govt-table">
+              <tbody>
+                <tr><td className="font-bold w-1/3">Name</td><td>{snapshot.name}</td></tr>
+                <tr><td className="font-bold">Batch</td><td>{snapshot.batchNumber}</td></tr>
+                <tr><td className="font-bold">Stage</td><td>{snapshot.stage}</td></tr>
+                <tr><td className="font-bold">Validation</td><td>{snapshot.validationStatus}</td></tr>
+                <tr><td className="font-bold">Approvals</td><td>{snapshot.approvalCount}</td></tr>
+                <tr><td className="font-bold">Rejections</td><td>{snapshot.rejectionCount}</td></tr>
+                <tr><td className="font-bold">Custodian</td><td className="font-mono text-xs break-all">{snapshot.currentCustodian}</td></tr>
+                <tr><td className="font-bold">Mfg Date</td><td>{snapshot.manufacturedAt}</td></tr>
+                <tr><td className="font-bold">Expiry</td><td>{snapshot.expiryAt}</td></tr>
+                <tr><td className="font-bold">Created</td><td>{snapshot.createdAt}</td></tr>
+                <tr><td className="font-bold">Updated</td><td>{snapshot.updatedAt}</td></tr>
+              </tbody>
+            </table>
           </div>
         )}
       </div>

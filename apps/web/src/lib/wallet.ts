@@ -38,6 +38,16 @@ export async function ensureDemoNetwork(provider: BrowserProvider): Promise<Brow
   return fresh;
 }
 
+export function getNetworkDisplayName(network: Awaited<ReturnType<BrowserProvider["getNetwork"]>>): string {
+  try {
+    if (network.name) return network.name;
+  } catch {
+    // ethers v6 throws on unregistered networks
+  }
+  if (Number(network.chainId) === 11155111) return "Sepolia";
+  return `Chain ${network.chainId}`;
+}
+
 export async function switchToDemoNetwork() {
   if (typeof window === "undefined" || !window.ethereum?.request) {
     throw new Error("MetaMask is required to switch networks.");
@@ -50,6 +60,8 @@ export async function switchToDemoNetwork() {
 }
 
 export function describeContractError(error: unknown) {
+  console.error("[wallet] Contract interaction error", error);
+
   if (!(error instanceof Error)) {
     return "Transaction failed.";
   }

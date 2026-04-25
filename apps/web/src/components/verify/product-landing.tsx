@@ -38,15 +38,15 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 function describeError(err: unknown): string {
   if (!(err instanceof Error)) return "Failed to load product data.";
   const msg = err.message.toLowerCase();
-  if (msg.includes("unknownproduct")) return "Product not found on the contract. It may not have been registered yet.";
-  if (msg.includes("timeout")) return "Network request timed out. The RPC endpoint may be slow.";
-  if (msg.includes("network")) return "Network error. Cannot connect to Sepolia RPC.";
+  if (msg.includes("unknownproduct")) return "Product not found in registry. It may not have been registered yet.";
+  if (msg.includes("timeout")) return "Network request timed out. Please check your connection and try again.";
+  if (msg.includes("network")) return "Network error. Cannot connect to blockchain RPC endpoint.";
   return err.message;
 }
 
 function formatDate(timestamp: number): string {
   if (!timestamp) return "—";
-  return new Date(timestamp * 1000).toLocaleDateString(undefined, {
+  return new Date(timestamp * 1000).toLocaleDateString("en-IN", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -56,67 +56,16 @@ function formatDate(timestamp: number): string {
 function StatusBadge({ status }: { status: number }) {
   if (status === 1) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-sm font-semibold text-emerald-700">
-        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-        Approved
-      </span>
+      <span className="govt-badge govt-badge-success text-sm px-3 py-1">APPROVED</span>
     );
   }
   if (status === 2) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-1.5 text-sm font-semibold text-red-700">
-        <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-        Rejected
-      </span>
+      <span className="govt-badge govt-badge-danger text-sm px-3 py-1">REJECTED</span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-1.5 text-sm font-semibold text-amber-700">
-      <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-      Pending Review
-    </span>
-  );
-}
-
-function StageTracker({ currentStage }: { currentStage: number }) {
-  return (
-    <div className="flex items-center justify-between">
-      {STAGE_LABELS.map((label, i) => {
-        const isDone = i < currentStage;
-        const isCurrent = i === currentStage;
-        return (
-          <div key={label} className="flex flex-1 items-center">
-            <div className="flex flex-col items-center">
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
-                  isCurrent
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                    : isDone
-                      ? "bg-emerald-500 text-white"
-                      : "bg-gray-100 text-gray-400"
-                }`}
-              >
-                {isDone ? "✓" : i + 1}
-              </div>
-              <span
-                className={`mt-1.5 text-[11px] font-medium ${
-                  isCurrent ? "text-blue-600" : isDone ? "text-emerald-600" : "text-gray-400"
-                }`}
-              >
-                {label}
-              </span>
-            </div>
-            {i < STAGE_LABELS.length - 1 && (
-              <div
-                className={`mx-1 h-0.5 flex-1 ${
-                  i < currentStage ? "bg-emerald-400" : "bg-gray-200"
-                }`}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
+    <span className="govt-badge govt-badge-warning text-sm px-3 py-1">PENDING REVIEW</span>
   );
 }
 
@@ -148,7 +97,7 @@ export function ProductLanding({ seed }: { seed: string }) {
     fetchReducer,
     hasSeed
       ? { status: "loading" as const, product: null, error: null }
-      : { status: "idle" as const, product: null, error: "No product seed specified." },
+      : { status: "idle" as const, product: null, error: "No product identification seed specified." },
   );
   const [showDetails, setShowDetails] = useState(false);
 
@@ -205,189 +154,199 @@ export function ProductLanding({ seed }: { seed: string }) {
   const isExpired = product ? product.expiryAt * 1000 < currentTime : false;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="mx-auto flex w-full max-w-lg flex-col px-4 py-6 sm:py-10">
-
-        {/* Header */}
-        <div className="text-center">
-          <Link
-            href="/"
-            className="text-xs font-medium tracking-widest text-gray-400 transition-colors hover:text-blue-600"
-          >
-            ETHICAL SUPPLY CHAIN
+    <main className="min-h-screen bg-govt-bg">
+      <div className="govt-container px-4 py-4" style={{ maxWidth: "800px" }}>
+        <div className="flex items-center gap-2 mb-4 text-xs">
+          <Link href="/" className="text-govt-blue hover:underline">
+            Home
           </Link>
-          <h1 className="mt-1 text-lg font-semibold text-gray-900">
-            Product Verification
-          </h1>
+          <span>/</span>
+          <Link href="/verify" className="text-govt-blue hover:underline">
+            Verify Product
+          </Link>
+          <span>/</span>
+          <span className="text-govt-gray-dark">Product Details</span>
         </div>
 
-        {/* Loading */}
         {loading && (
-          <div className="mt-16 text-center">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
-            <p className="mt-4 text-sm text-gray-500">
-              Loading product data from the blockchain...
-            </p>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="mt-12 rounded-2xl bg-white p-8 text-center shadow-sm">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-              <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-              </svg>
+          <div className="govt-section">
+            <div className="govt-section-body text-center py-8">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-govt-border border-t-govt-blue" />
+              <p className="mt-4 text-sm text-govt-gray-dark">
+                Loading product data from blockchain registry...
+              </p>
             </div>
-            <h2 className="mt-4 text-base font-semibold text-gray-900">Product Not Found</h2>
-            <p className="mt-2 text-sm text-gray-500">{error}</p>
-            <Link
-              href="/verify"
-              className="mt-6 inline-block rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
-            >
-              Try Manual Lookup
-            </Link>
           </div>
         )}
 
-        {/* Product Card */}
-        {product && (
-          <div className="mt-6 space-y-4">
+        {error && (
+          <div className="govt-section">
+            <div className="govt-section-body text-center py-8">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+                <span className="text-2xl text-govt-red">&#9888;</span>
+              </div>
+              <h2 className="mt-4 text-base font-bold text-govt-blue">Product Not Found in Registry</h2>
+              <p className="mt-2 text-sm text-govt-gray-dark">{error}</p>
+              <Link
+                href="/verify"
+                className="govt-btn govt-btn-secondary mt-4 inline-block"
+              >
+                Try Manual Lookup
+              </Link>
+            </div>
+          </div>
+        )}
 
-            {/* Main Info Card */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {product.name || "Unnamed Product"}
-                  </h2>
-                  {product.manufacturerName && (
-                    <p className="mt-0.5 text-sm text-gray-500">
-                      by {product.manufacturerName}
-                    </p>
-                  )}
-                </div>
+        {product && (
+          <div className="space-y-4">
+            <div className="govt-section">
+              <div className="govt-section-header flex items-center justify-between">
+                <span>Product Information</span>
                 <StatusBadge status={product.validationStatus} />
               </div>
+              <div className="govt-section-body">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-govt-gray-dark">Product Name</p>
+                    <p className="text-base font-bold text-govt-blue">
+                      {product.name || "Unnamed Product"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-govt-gray-dark">Manufacturer</p>
+                    <p className="text-sm">{product.manufacturerName || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-govt-gray-dark">Batch Number</p>
+                    <p className="text-sm font-mono">{product.batchNumber || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-govt-gray-dark">Product Seed</p>
+                    <p className="text-sm font-mono">{seed}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-govt-gray-dark">Manufacturing Date</p>
+                    <p className="text-sm">{formatDate(product.manufacturedAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-govt-gray-dark">Expiry Date</p>
+                    <p className={`text-sm ${isExpired ? "text-govt-red font-bold" : ""}`}>
+                      {formatDate(product.expiryAt)}
+                      {isExpired && " (EXPIRED)"}
+                    </p>
+                  </div>
+                </div>
 
-              {isExpired && (
-                <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-                  This product has passed its expiry date.
-                </div>
-              )}
-            </div>
-
-            {/* Key Details */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-medium text-gray-400">Batch Number</p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {product.batchNumber || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-400">Product Seed</p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{seed}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-400">Manufactured</p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {formatDate(product.manufacturedAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-400">Expires</p>
-                  <p className={`mt-1 text-sm font-semibold ${isExpired ? "text-red-600" : "text-gray-900"}`}>
-                    {formatDate(product.expiryAt)}
-                  </p>
-                </div>
+                {isExpired && (
+                  <div className="mt-4 bg-red-50 border border-govt-red px-3 py-2 text-sm font-bold text-govt-red">
+                    WARNING: This product has passed its expiry date and should not be consumed.
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Authority Validation */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900">Authority Validation</h3>
-              <div className="mt-3 flex gap-3">
-                <div className="flex-1 rounded-xl bg-emerald-50 p-3 text-center">
-                  <p className="text-2xl font-bold text-emerald-700">{product.approvalCount}</p>
-                  <p className="mt-0.5 text-xs font-medium text-emerald-600">
-                    Approval{product.approvalCount !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                <div className="flex-1 rounded-xl bg-red-50 p-3 text-center">
-                  <p className="text-2xl font-bold text-red-700">{product.rejectionCount}</p>
-                  <p className="mt-0.5 text-xs font-medium text-red-600">
-                    Rejection{product.rejectionCount !== 1 ? "s" : ""}
-                  </p>
-                </div>
+            <div className="govt-section">
+              <div className="govt-section-header">Supply Chain Stage Progress</div>
+              <div className="govt-section-body">
+                <table className="govt-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "10%" }}>#</th>
+                      <th>Stage</th>
+                      <th style={{ width: "25%" }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {STAGE_LABELS.map((label, i) => {
+                      const isDone = i < product.stage;
+                      const isCurrent = i === product.stage;
+                      return (
+                        <tr key={label} className={isCurrent ? "bg-blue-50" : ""}>
+                          <td className="text-center font-bold">{i + 1}</td>
+                          <td className="font-bold">{label}</td>
+                          <td>
+                            {isDone ? (
+                              <span className="govt-badge govt-badge-success">Completed</span>
+                            ) : isCurrent ? (
+                              <span className="govt-badge govt-badge-warning">Current Stage</span>
+                            ) : (
+                              <span className="text-govt-gray-dark">Pending</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            {/* Supply Chain Stage */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900">Supply Chain Stage</h3>
-              <div className="mt-4">
-                <StageTracker currentStage={product.stage} />
+            <div className="govt-section">
+              <div className="govt-section-header">Authority Validation Record</div>
+              <div className="govt-section-body">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border border-govt-green bg-green-50 p-4 text-center">
+                    <p className="text-3xl font-bold text-green-700">{product.approvalCount}</p>
+                    <p className="text-xs font-bold text-green-700 mt-1">Approvals Received</p>
+                  </div>
+                  <div className="border border-govt-red bg-red-50 p-4 text-center">
+                    <p className="text-3xl font-bold text-red-700">{product.rejectionCount}</p>
+                    <p className="text-xs font-bold text-red-700 mt-1">Rejections Recorded</p>
+                  </div>
+                </div>
+                <p className="text-xs text-govt-gray-dark mt-3">
+                  Threshold requirement: 2 of 3 authority approvals needed for product validation.
+                </p>
               </div>
             </div>
 
-            {/* Collapsible Technical Details */}
-            <div className="rounded-2xl bg-white shadow-sm">
+            <div className="govt-section">
               <button
                 type="button"
                 onClick={() => setShowDetails(!showDetails)}
-                className="flex w-full items-center justify-between px-6 py-4 text-left"
+                className="w-full text-left govt-section-header cursor-pointer hover:bg-govt-blue-light"
               >
-                <span className="text-sm font-semibold text-gray-900">Technical Details</span>
-                <svg
-                  className={`h-5 w-5 text-gray-400 transition-transform ${showDetails ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                </svg>
+                Technical Details {showDetails ? "(Click to Hide)" : "(Click to View)"}
               </button>
               {showDetails && (
-                <div className="border-t border-gray-100 px-6 pb-5 pt-4">
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs font-medium text-gray-400">Product ID</p>
-                      <p className="mt-1 break-all font-mono text-xs text-gray-600">{productId}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-400">Certificate Hash</p>
-                      <p className="mt-1 break-all font-mono text-xs text-gray-600">{product.certificateHash}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-400">Current Custodian</p>
-                      <p className="mt-1 break-all font-mono text-xs text-gray-600">{product.currentCustodian}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-400">Network</p>
-                      <p className="mt-1 text-xs text-gray-600">Sepolia Testnet (Chain 11155111)</p>
-                    </div>
-                  </div>
+                <div className="govt-section-body">
+                  <table className="govt-table">
+                    <tbody>
+                      <tr>
+                        <td className="font-bold w-1/3">Product ID (bytes32)</td>
+                        <td className="font-mono text-xs break-all">{productId}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Certificate Hash</td>
+                        <td className="font-mono text-xs break-all">{product.certificateHash}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Current Custodian Address</td>
+                        <td className="font-mono text-xs break-all">{product.currentCustodian}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Network</td>
+                        <td>Sepolia Testnet (Chain ID: 11155111)</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Contract Version</td>
+                        <td>ESC V1</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
 
-            {/* Footer Note */}
-            <p className="px-2 text-center text-xs text-gray-400">
-              Data read directly from the Ethereum blockchain. No wallet required.
+            <p className="text-center text-xs text-govt-gray-dark py-2">
+              Data read directly from the Ethereum blockchain. No wallet connection required.
             </p>
           </div>
         )}
 
-        {/* Bottom Nav */}
-        <div className="mt-8 flex justify-center">
-          <Link
-            href="/verify"
-            className="text-sm font-medium text-gray-500 transition-colors hover:text-blue-600"
-          >
-            Manual Lookup →
+        <div className="mt-4 text-center">
+          <Link href="/verify" className="text-sm text-govt-blue hover:underline">
+            Return to Product Lookup
           </Link>
         </div>
       </div>

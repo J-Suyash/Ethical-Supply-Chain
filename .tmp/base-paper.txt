@@ -1,0 +1,725 @@
+Chapter 4
+
+Blockchain-​Based Medicine
+Supply Chain for Transparent
+Healthcare Tracking
+Rana Muhammad Amir Latif
+https://​orcid​.org/​0000​-​​0001​-​​6007​-​​6275
+East China Normal University, China
+Muhammad Farhan
+COMSATS University Islamabad, Sahiwal, Pakistan
+Jawad Ahmad
+Prince Mohammad Bin Fahd University, Saudi Arabia
+Leonardo Mostarda
+University of Perugia, Italy
+Diletta Cacciagrano
+https://​orcid​.org/​0000​-​​0003​-​​4491​-​​0666
+University of Camerino, Italy
+
+ABSTRACT
+The Medicine Supply Chain (MSC) faces critical challenges in traceability, transparency, and counterfeit
+prevention. This paper proposes a Blockchain-​based solution using Ethereum smart contracts (developed
+in Solidity, deployed via Truffle, and tested on Rinkeby and localhost networks) to enhance MSC integrity. The framework introduces consumer authentication, Universal Product Code (UPC) registration,
+and transaction logging to ensure end-​to-​end drug traceability. By embedding multilingual UPCs (e.g.,
+Urdu, Hindi), the system improves accessibility for diverse healthcare users, who can verify medicine
+authenticity via QR codes or a dedicated mobile app. The study examines scalability challenges (e.g.,
+managing 100K+ UPCs in large healthcare networks) and evaluates the shifting dynamics among stakeholders (suppliers, processors, retailers). Public Blockchain implementation demonstrates potential for
+decentralized, tamper-​proof record-​keeping, though trade-​offs in efficiency and adoption barriers persist.
+
+DOI: 10.4018/979-8-3373-0593-6.ch004
+Copyright ©2025, IGI Global Scientific Publishing. Copying or distributing in print or electronic forms without written permission of IGI Global Scientific Publishing is prohibited.
+
+81
+
+1 INTRODUCTION
+The US Centre for Disease Control (CDC) predicts that 48 million individuals will become sick with
+outdated drug use, 128000 people will be treated severely, and three thousand will die per year in the
+US alone (Sumalatha, Raghuraman, Surya, & Monisha, 2024). The successful control of the quality of
+medical goods will prevent epidemiological diseases, economic adulteration, and pollution (Agarwal
+et al., 2022; Qin, Su, Huang, Wiersma, & Liu, 2019). New Blockchain-​based systems are essential to
+track medical goods’ consistency and maximize the degree of accessibility of the tracked data to enhance
+security and reduce waste (Meidute-​Kavaliauskiene, Yazdi, & Mehdiabadi, 2022; Moosivand, Ghatari,
+& Rasekh, 2019).
+Blockchain in the supply chain will reduce the scarcity of quality details on actual medical device
+shipments, resulting in targeted business recalls (Z. Liu & Zhang, 2023). For instance, the corporation
+must withdraw all medical items within a specific period, where a quality management gap is found
+along with the MSC (Viegas, Bond, Vaz, & Bertolo, 2019). This restriction prevents the fast extraction
+of a defeated material at higher MSC speeds (Ahmed, Turki, Baklouti, Dammak, & Alshahrani, 2024;
+Havaeji, Dao, & Wong, 2023).
+A more open approach to data exchange is required to shift past a ‘traceability-​cantered’ or an
+‘income-​centric’ supply chain. There is a trade-​off between providing the customer with accurate details
+on a particular commodity and safeguarding the organizational integrity of the MSC. The potential of
+Blockchain technologies to offer open, safe, and trusted data across both private and public contexts
+attracted interest through crypto currents (Hu, Chen, He, & Du, 2019).
+Companies involved in a supply chain are less likely to exchange data even as knowledge asymmetry
+has been lowered and inter-​organizational cooperation has been enhanced by information and communication technology (ICT) (Dhingra, Raut, Kumar, & Naik, 2024). In such a sense, blockchain is a digital
+certificate authority that may offer economic and organizational advantages. However, owing to its
+complexity and the scarcity of usage cases and implementation studies, businesses working in a supply
+chain appear to have no awareness of blockchain (Adarsh, Joseph, John, Lekshmi, & Asharaf, 2021;
+Ghadge, Bourlakis, Kamble, & Seuring, 2023). The research is focused on a decentralized coordination
+system where no single central authority controls the network that is not a central individual. Data is
+available directly in the general ledger, and a transaction applied to the blockchain after its authentication
+is feasible for all accepted agencies.
+•
+•
+•
+
+•
+
+The benefit of Blockchain technologies in MSC may be extended to enhance the digital data transparency attained by multiple MSC organizations.
+With the introduction of sensor-​based data processing systems of Blockchain technology, the
+whole exposure of medical devices through various supply chain institutions will become a fact.
+The primary benefits of implementing Blockchain technology at MSC include real-​time monitoring and sensing, identifying critical bottlenecks, preventing medical product adulteration, identifying low ties on occurrences, assessing the shelf life of medical products, thereby reducing waste,
+and providing customers with end-​to-​end information.
+An early version of the research on the Specific ID has been implemented. A Product package collects details concerning the commodity and the MSC that may be added to the unique integrated
+ID.
+
+82
+
+Beyond the alarming statistics reported by the CDC, the medical supply chain is fraught with vulnerabilities including fragmented data systems, counterfeit drugs, and inefficient recall processes. These
+systemic issues demand more than incremental improvement. Blockchain technology, with its capacity
+for immutable record-​keeping, decentralized verification, and smart automation, presents a transformative opportunity to secure, streamline, and digitize the medicine supply chain. This paper explores
+how blockchain can be leveraged not only to meet modern compliance and safety standards but also to
+rebuild trust in the healthcare ecosystem.
+The paper is further organized so that in the 1st section, we have a detailed introduction related to
+our manuscript. In the 2nd section, we discuss previous and recent work related to our manuscript with 4
+subsections. In the 3rd section, we have 1 section discussing the proposed blockchain model in the Medicine Supply Chain related to our manuscript. In the 4th section, we have 5 sub-​sections discussing the
+case study of blockchain in healthcare. In the 5th section, we have 1 section and 2 subsections discussing
+blockchain implementation in real-​life scenarios. In the 6th section, we have discussed the conclusion.
+In the last 7th section, we discussed the future work on implementing Blockchain technology in the
+Medicine Supply Chain network.
+
+2 LITERATURE REVIEW
+Extant literature has widely stressed that confidence and knowledge exchange are advantageous to the
+supply chain’s success, especially in a global market with an increased propensity to outsource strategic
+activities to gain excellent stability and resilience. It has been demonstrated that confidence is also a
+helpful measure of the supply chain’s success and encourages cost savings, excellent stability, and robust
+organizational governance. Studies usually concentrate on demand and inventory details, which can be
+seen when evaluating confidence and knowledge exchange in the supply chain (Panda & Satapathy, 2021).
+Bitcoin Nakamoto (Nakamoto, 2008) was developed as a digitally distributed digital money infrastructure leveraging Blockchain technologies in 2008. This implementation launched common Blockchain
+technology recognition and use. Blockchain infrastructure is focused on database technology-​driven
+distributed ledger structures involving collaborative multi-​node management, point-​to-​point exchange,
+cryptographic algorithms, and consensus-​based processes. All the features of Blockchains are looked
+after: high security, data transparency, decentralization, and immutability, even without a trustworthy
+intermediary (Latif et al., 2019).
+Tracking and tracking in real-​time are essential for a cohesive view of global supply chains. Monitoring
+and tracking are mainly required in project-​based organizations where many suppliers are engaged in
+a single project. This paper proposes a pilot system for real-​time tracking and tracing of a cloud-​based
+portal. RFID, IoT, and Blockchain systems establish a series of permanent transactions. The pilot analysis
+also demonstrates the drawbacks and disadvantages of such a portal method (Jamil, Ahmad, Whangbo,
+Muthanna, & Kim, 2022).
+Blockchain technology provides a range of development areas, especially for managing the supply
+chain. Several transaction-​based processes throughout the supply chain might eliminate intermediary
+operations. However, the technology’s confidence advantages cannot be passed explicitly to SCM without
+additional requirements. Against this context, the study says active confidence protection among supply
+chain partners will still be necessary. The study indicates that Blockchain technology can be heavily
+
+83
+
+applicable to SCM before 2035 and offers favorable feedback and exciting opportunities for policymakers
+in the sector (Kopyto, Lechler, Heiko, & Hartmann, 2020).
+Product management significantly affects the efficiency of the supply chain. In sound product control,
+supply chain knowledge is often essential. Deletion of goods, rationalization, or discontinuation analysis is sometimes ignored as a significant factor. Blockchain technology can help solve smart execution
+and traceability, accountability, protection, consistency, and smart deployment for commodity deletion
+decision-​making processes. Return to home internet mail. Back to the tab from which we come (Miriam,
+Doreen, Dahiya, & Rene Robin, 2023).
+For supply chain management, these innovations’ importance resides in four sectors: greater accountability and traceability, digitization and disintermediation of the supply chain, strengthened cyber
+protection, and smart contracts. This report discusses many problems, differences in knowledge, and the
+potential for more study. The configuration of a Blockchain-​enabled supply chain has also been discussed
+from a design viewpoint (Wang, Han, & Beynon-​Davies, 2019).
+However, devices from the Internet of Things (IoT) are vulnerable to protection threats. Bitcoin has
+recently emerged as one of the most commonly recognized applications for trustworthy, safe, decentralized smart transport networks. This study aims to encourage logistics and transport by exploring the
+potential of IoT and IoT technologies (Humayun, Jhanjhi, Hamid, & Ahmed, 2020).
+The Internet of Things (IoT) is a crucial driver of intellectual development, including intelligent
+houses, intelligent communities, and intelligent industries. The rapid growth of IoT-​based intelligent
+applications requires strong protection for data safety, information integrity, and authentication control
+and maintenance. The study investigates the Internet by incorporating IoT technologies into blockchain
+for encryption solutions. The study initially centered on the platform's core Blockchain components,
+forms, and architecture applications. Blockchain’s potential strategies for the Internet of Things remain
+to be decided (Ahmad et al., 2024).
+IoT devices have become a fact but are prone to attacks from the defense. Bitcoin has recently been
+one of the most well-​known technologies for safe, trusted, decentralized smart transport systems. This
+thesis intends to contribute to the logistics and transport sector by analyzing the potential of IoT and IoT
+technologies in intelligent logistics (Humayun et al., 2020).
+Blockchain focuses principally on the financial industry, although some latent sectors, such as healthcare, continue to flourish. In the context of blocks, it is necessary to decentralize patient data, laboratory assessment reports, PhD expectations, and exact knowledge of health care. These blocks may be
+correlated with the sequence of events in clustered blocks. This method and human involvement should
+be replaced and substituted to streamline the healthcare sector’s focus on patient reports and laboratory
+examination findings. The new structure is hoped to enhance the healthcare environment in the hospital
+environment (Latif, Hussain, Jhanjhi, Nayyar, & Rizwan, 2020).
+In both fields, blockchain gathers traction. This book includes protocols, problems, protection improvements, applicability, roles, crypto-​monetary technology, and production forms. It offers broad
+enterprise apps with accessible case studies and significant cloud, smart city, and IoT installations. The
+book highlights the development, state-​of-​the-​art technology, and numerous tools and channels (Al-​
+Marridi, Mohamed, & Erbad, 2024).
+In a comprehensive literature analysis, blockchain’s assessment process growth and adoption into a
+decentralized supply chain are crucial study recommendations in the future. The Blockchains can result
+in the expense, consistency, speed, stability, and gain of reduced risks. They are, therefore, resilient
+
+84
+
+and have some possible effects. Many of these gains and comparative advantages from blockchain are
+extracted from the supply chain (Latif, Farhan, et al., 2020).
+
+2.1 Research Gap
+Despite growing interest in blockchain for supply chain management, existing research lacks practical
+implementations specifically tailored to the medical supply chain. Few studies explore the integration
+of Ethereum-​based smart contracts with traceability mechanisms like Universal Product Codes (UPC).
+Moreover, real-​world use cases demonstrating end-​to-​end tracking from production to consumer remain
+limited. This study addresses these gaps by proposing and testing a blockchain-​based medicine traceability model, emphasizing transparency, authenticity, and consumer trust.
+
+2.2 Summary
+The author discussed the usage of permission blockchains to track the medicines a pharmaceutical firm
+uses. The author also mentioned the function that allows recording a patient’s response to medication.
+The author’s system enables only trusted actors to join the supply chain network; therefore, these users
+may only submit data. The author highlighted how counterfeit medications are wreaking havoc on the
+healthcare system and how blockchain technology might aid in establishing a medical supply chain that
+runs from producer to consumer. The author proposes utilizing blockchain technology with an encrypted
+QR code imprinted on a medication. In his article, the author attempted to describe the intricacies of a
+medical supply chain. The most critical entity in a medical supply chain, a pharmaceutical firm, faces
+many risks that may jeopardize the quality and quantity of medication. The author argued that disclosing
+information about medication from the manufacturer to the consumer may assist in eradicating fraud. The
+author has suggested a scenario-​based drug tracking and authentication system, dubbed Drug Ledger, built
+on peer-​to-​peer blockchain technology. The author discussed segmenting service components into three
+distinct parts. He also disclosed the methods used to determine the logic of the medication supply chain.
+
+2.3 Existing Systems in Blockchain
+The current FSC management system derives from the product's web-​based architecture. Food items
+are built on cloud architecture with a centralized mediator server to control and verify the many actions.
+As Figure 1 shows, the cloud-​enabled Medicine Supply Chain Management System is also not particularly safe as it cannot guarantee customers end-​to-​end security since many intermediaries are involved.
+
+85
+
+Figure 1. Traditional Supply Chain Model illustrating the flow of goods and information from suppliers
+to end customers.
+
+3 THE BLOCKCHAIN PLATFORM
+A Blockchain platform is also a distributed publication with a digital currency structure listing all
+the crypto-​currency transactions. Server-​based solutions do not call for a central host to manage the
+Blockchain platform and to keep a comprehensive transaction history (Huang & Al Foysal, 2021); it
+is like a peer-​to-​peer (P2P) system. Supporting Satoshi Nakamoto's first real digital money in 2009,
+known as “Bitcoin,” cryptography and the Blockchain platform would be the backbone technologies.
+On the other hand, it preserves a copy of the Blockchain Platform, therefore offering a shared archive
+on all nodes or entities of this system for torrent sharing of papers (Sabri, Harchi, & El Kamoun, 2022).
+Every block in a Blockchain system consists of a public and a private key. Every transaction has
+information enough to identify the sender, time, asset information, sender, and recipient pertinent to
+the past ones. In a supply chain, a commodity may be a contract between a seller or buyer or a product
+(Adrian Gheorghe & Unal Tatar, 2021). With the public key and the pertinent material, the Secure Hash
+Algorithm 256 (SHA-​256) generates a hexadecimal 16-​digit collection known as the “hash.” The generated hash blends original public key data with transaction (Shah, Verma, Sharma, Sampat, & Kulkarni,
+2023) information. One element is the series of transactions. Decoding the encrypted information helps
+to confirm the transaction and source. Transactional data will be decoded only by sheer force. Miners are
+the nodes that verify these transactions; mining is the settling mechanism. Should the gadget generate
+an untested transaction block (Govindan, Nasr, Saeed Heidary, Nosrati-​Abarghooee, & Mina, 2023),
+miners may verify the transaction into a cryptographical hash solution. Unlike other Blockchain systems,
+such Hyster edger networks, and Ethereum, Bitcoin runs on “proof of work.” Consensus algorithms help
+explain the choice of a mining method. Three basic elements define a block on a Blockchain network: a
+
+86
+
+hash, a single digital key, a timestamp, and the hash of the previous block to track account balance. The
+hash of this latest block is linked so that every block is jointly updated or launched by two authorized
+blocks, therefore defending against any block (Saha, Rathore, Parida, & Rana, 2022).
+The Blockchain system marks the instant a transaction is validated. For a Blockchain network such
+as Bitcoin, a significant change in the recorded transaction value presents a difficulty. An attacker must
+get at least 51% of the total processing capacity of the database system easily available (F. Ali, Aloqaily,
+Alfandi, & Ozkasap, 2020). Thus, the complete Blockchain network is strengthened, and the past block
+is confirmed for every upgrade. As Figure 2 shows, this procedure prevents disruptive behavior and
+offers the necessary quality of immutability on the Blockchain Network.
+Figure 2. The functioning of the Blockchain platform, demonstrating the chain of blocks and their interconnections through hashes, where each block contains its hash and the previous block's hash.
+
+Miners are rewarded with Bitcoins according to the amount of computing power they generate. The
+hashing algorithm transforms the dilemma periodically by changing the minimum and maximum hash
+value (nonce). Miners appear to obtain too many Bitcoins, especially when electricity is measured as
+completely new users combine (Pablo et al., 2022) because of the value of new Blocks. The amounts
+of hash speed exist at PH/s (1015), as shown in Figure 3. It continues to expand. Therefore, this curve
+is relative to Bitcoin’s buying price pattern over the past nine months. A comparison between the two
+charts is seen in the network when more users link to this system (Quayson, Avornu, & Bediako, 2024).
+The problem of resolving hash is-​. The standard Bitcoin Block Search time now begins at 18 zero; it also
+takes about 9.8 minutes to use the total network power of any mine operator on the system, as shown
+in Figure 4.
+Figure 3. Last year graph Bitcoin Cash Hash rate historical chart (bitinfocharts, 2024)
+
+87
+
+Figure 4. Bitcoin (BTC) price per day from April 6, 2022 to December 30, 2024 (statista, 2024)
+
+3.1 Supply Chains, Transparency, and Sustainability
+with Blockchain Technology
+The TOE theory of the system is a theory at the organizational level that explains the adoption of
+decisions by three sections of the market background. The technical, operational, strategic, and environmental facets of these three components affect technological advancement and the growth of businesses.
+This structure was broadened to incorporate the introduction of the IT supply chain (Chattu, 2021).
+Sustainability is an essential context for the climate, and we consider transparency one of disruptive
+technologies' most important attributes. Literature analysis indicates a spectrum of sustainable qualities
+has been used in previous research to discuss sustainability’s natural, fiscal, operational, technical, and
+social facets. Because of the lack of specific exposure to different confidentiality considerations, some of
+these characteristics are less important for judging transformative Blockchain technologies (Senna et al.,
+2021). By the openness of the supply chain, Blockchains boost environmental efficiency. Furthermore,
+the elements of transparency are included in our attributes chart.
+Transparency implies the degree to which knowledge is freely available in interaction and external
+observers, as well as in operational and environmental contexts. In the supply chain, flexibility applies
+to freely accessible knowledge inside a supply chain for end consumers and businesses (Saha, Rathore,
+& Gigi, 2021). In light of the new world of ‘contribution fewer’ correlated with Blockchains, openness
+will likely be a critical supply chain performance indicator.
+Lack of accountability will contribute to many problems in the supply chain, particularly in matters of
+financial, environmental, and social responsibility. Goods are being used to produce, develop, distribute,
+and market across an extensive network of extractor firms, dealers and marketers, transporters, storage
+facilities, and other service providers (Alyami, Rahman, & Yadlapalli, 2023). Sharing more knowledge
+regarding sources of goods and procedures is difficult because of this importance and uncertainty.
+
+88
+
+There is little analysis of how supply chains, particularly sustainability, may quickly assess and pick
+precise Blockchain technologies. When supply chain operators start appreciating possibilities, changes
+are more likely to be made in the efficiency and durability of the supply chain. We recommend that there
+should be three aspects of sufficient supply chain transparency:
+•
+•
+•
+
+The number of transparencies: including factors such as the knowledge involvement degree in the
+Supply Chain Participant, mode of activity, environmental and social supply chain details
+Product accountability such as commodity materials monitoring (i.e., raw material sources), commodity phase monitoring (from sources to end client), product environmental knowledge tracking
+(e.g., carbon recovery and emissions)
+Accountability of participants, clear criteria for participants’ activities, knowledge about the circumstance and their sustainability
+
+Firstly, organizations and supplier partners must be active in the supply chain to succeed. Provision
+chain openness is a significant problem, significantly above one stage of the system, as most businesses
+have little to no knowledge regarding second and third-​tier providers themselves (Ganesan, Devi, Kumar,
+& Gayathri, 2022). In comparison, consumers can not accurately recognize product or service attributes,
+e.g., Product protection, since environmental expertise is missing in the supply chain transparency.
+Secondly, accountability is associated with the monitoring and traceability of goods and the supply chain. It will involve the raw material sources, providing the background for a finished product or
+service. Tracking goods will give customers more trust that the items are legitimate, good quality, and
+ethical standards are pursued. The advantage of this openness element would improve buyer trust and
+raise the ability to buy a commodity substantially (Sneha, Panjwani, Lade, Randolph, & Vickery, 2021).
+Monitoring inventory cycles and evaluating commodity production details and network mechanisms will
+often allow businesses in the supply chain to realize if an inventory is incorrect, wrongly handled, or
+inappropriately controlled from a scheduling point of view. Tracking knowledge on product sustainability
+has been an essential method for encouraging green consumption. It gives customers a more in-​depth
+view of the commodity life cycle and the product's and operation's impact.
+Thirdly, there are many possible detrimental effects across all supply chain stakeholders’ actions
+and environments, such as manufacturing problems and delays, immoral and unlawful procedures, environmental pressures, loss of resources, slave labor, and unsafe industrial conditions. In recent decades,
+numerous accidents have left perceived vulnerability and stability to supply chain networks (Omar et
+al., 2021). Several supply chain processes and situations must also be monitored, such as legal and
+environmental issues.
+Introducing modern technologies in the supply chain networks is not straightforward because the
+complexities of incorporation are some of the biggest obstacles. Information and information technologies may satisfy specific criteria from a supply chain inclusion viewpoint. Blockchain would have a
+far-​reaching effect on supply chains to meet essential standards. Blockchain would have a far-​reaching
+effect on supply chains to meet essential standards (Chiacchio et al., 2022).
+•
+•
+
+Blockchains may boost product and process reliability and traceability to control nearly all data
+rates, date, place, consistency, qualification, and other related details.
+Blockchains provide smoother and cheaper transfers, meaning that the multiple parties satisfy
+their commitments by utilizing smart contracts, almost in a less faithful fashion.
+
+89
+
+•
+•
+•
+
+Thanks to this paperwork, Blockchain technology can minimize paperwork and bureaucracy.
+Blockchain will reduce future risks from errors, confusion, and exchange in grey markets.
+Blockchain may establish more significant ties between the stakeholders and the supply chain.
+
+These attributes influence the literature’s criteria and inter-​agency selection variables for information
+technology. Inclusion: expense, time, adaptability, fairness and interoperability, processing capability,
+scalability, protection, efficiency, involvement, and supporting partners. We also have an outline of these
+technological features of inter-​organizational IT evaluation.
+
+3.2 Challenges Of the Blockchain in The Field of Medicine
+Mostly, a centralized organization controls the existing medical supply chain system, which is untrustworthy. Below, we highlighted several problems connected to the current system.
+•
+•
+•
+
+•
+•
+
+In a centralized organization or a single company, it is thought that the medical supply chain is intrinsically difficult to identify, manage, and update any magic button that will assist in eliminating
+inefficiencies to save costs.
+For its supply chain, it accounts for around 25% of the pharmaceutical cost. In addition, medical
+equipment costs up to 40%. The supply chain costs about $230 billion each year.
+It is difficult to gather reliable statistics for a centralized organization such as Fairtrade. Since a
+particular company controls the data, other stakeholders cannot monitor the route of medications
+and are, therefore, unable to optimize manufacturing and storage. Even a modest improvement
+may thus settle a big amount.
+In addition, depending on one entity gives it tremendous control over sensitive data. Furthermore,
+it creates the possibility of fraud, corruption, falsified medicines, and a single failure point.
+Finally, the customer must only rely on the third-​party organization’s approved logos.
+
+4 BLOCKCHAIN IN MSC BASED ON UNIVERSAL
+PRODUCT CODE (UPC) MODEL
+A shop is where the object is kept after development in the business. A carrier is a firm that carries
+the product to a particular area from a shop. In any emergency user, the user may still have the cover on
+the commodity in question. Importers often import medicines to market these medicines in the countries
+at a high cost, where only one object can be purchased in a massive volume. Wholesalers and retailers
+operate at a limited level every day. They are following the import into the nation of the products. Wholesalers procure the merchandise and market it at a wholesale rate to consumers. In March and some other
+local stores identified by a government or private corporation, this seller will scale this item at any cost.
+The consumer may use a shared key to search for RFID, QR codes, and any mechanical gadget. Also,
+the customer may get statistics on the commodity from the whole distribution region and even verify
+the price. Check the object details on the expiration date. Additionally, the client receives an inspection
+of the item before payment, a machine-​generated SMS, and detailed information about the item and
+transaction, as shown in Figure 5.
+
+90
+
+Figure 5. Universal Product Code (UPC) based Product traceability model for blockchain
+
+5 THE CASE STUDY OF BLOCKCHAIN IN HEALTHCARE
+Today, awareness is transforming the healthcare industry. Sellers strive to strengthen their customer
+base and raise options for the market by relying on customized importations. The Blockchain system
+will help shops meet their targets economically. The blockchain from the healthcare sector will provide
+traders with plenty of help to progress their industry procedures to improve their enterprise and explain
+other methods (Jraisat, Jreissat, Upadhyay, & Kumar, 2023).
+
+5.1 Medicine Supply Chain
+Tracking shipments is an essential part of the delivery chain. Blockchain can be used to report shipping
+details during each tracking point, such as location, time and date, the handling of shipments, person
+details, fever, and product status. It allows one to determine whether the shipment has been handled
+accurately; it often happens on schedule in every area (Vatambeti, Krishna, Karthik, & Damera, 2024).
+It would also help the dealers find the facilities and goods that have been destroyed or missing on the
+market. Note that an official listing of this distribution sequence would enable the shops to identify the
+exact basis and difficulties of the products. Blockchain-​related exchanges are often planned to allow
+vendors in the Blockchain public ledger (Yaqoob, Salah, Jayaraman, & Al-​Hammadi, 2022) to buy and
+sell from each other and vendors (Al-​Sumaidaee, Alkhudary, Zilic, & Swidan, 2023).
+
+5.2 Customer Profiling
+Blockchain may be used to gather customer-​related data and to determine trend positioning. The
+knowledge forecasts the location and tacit product specifications to boost their trouble-​free warehouse
+(Wan & Huang, 2023). Once again, retailers utilize Blockchain technologies to create sophisticated data
+management procedures, as the knowledge is invisibly backed by various analytical tools (S. Liu, Zhang,
+
+91
+
+Liu, & Shi, 2023). At delivery, the risk of illegal fiscal exchange would be minimized by blockchain.
+Since blockchain holds all companies, organizations can calculate costs in real time if appropriate. Price
+considerations, cash return, customized retail pricing deals, and other consumer cost supplies can be
+analyzed along with relevant supplies that a real-​time base may exchange with them (Mahammad &
+Kumar, 2023).
+
+5.3 Transparency
+The knowledge stored in the blockchain is undoubtedly useful to consumers, stores, and manufacturers,
+and the stock of goods likely to be accessed may all be created by child labor. In the event of secret or
+unsafe pieces, the facilities and products enable retailers/Consumers to pick. This increased openness of
+blockchain is expected to be much more suitable for consumer behavior (Hasan et al., 2022).
+
+5.4 Authenticity and Anti-​Counterfeiting
+A person may use blockchain to validate the authenticity of the object. Customers will then move
+through the paperwork to grant counterfeiting a massive degree of trust in the item’s caliber. It can improve consumer faith (Debnath et al., 2023).
+
+5.5 Loyalty
+By retaining encoded customer data certificates, promotions, and coupons, blockchain will re-​enhance
+the rewards policy and even get details from most shops, providing more detailed consumer documents
+(Centobelli, Cerchione, Del Vecchio, Oropallo, & Secundo, 2022). A Blockchain loyalty pledge will also
+encourage consumers to show their devotion at a specified position around the suppliers. The blockchain
+mentioned above processes will contribute to greater consumer loyalty, better customs purchasing, more
+procured companies, and more significant revenue for their merchants (Centobelli et al., 2022).
+
+6 IMPLEMENTATION OF THE BLOCKCHAIN
+The flowchart illustrates the process of managing medicine traceability through Blockchain technology. It begins with the registration of a new farm, followed by various stages like the collection of raw
+medicine, raw product lifecycle management, and the creation of a new medicine. The product is then
+packed, listed for sale, and can be sold if a buyer’s offer exceeds the set price. The process continues
+with shipping the medicine to the new owner, who can either sell or consume the product. This flowchart
+emphasizes the role of blockchain in improving medicine traceability and securing transactions within
+the supply chain. The foundation of this paper is based on using Ethereum smart contracts, developed
+in solidity and tested on the ‘rinkeby’ test-​net, as shown in Figure 6.
+
+92
+
+Figure 6. The flow chart of the implementation of the Blockchain in Medicine Supply Chain
+
+6.1 Basic Algorithm to Add One UPC in Blockchain
+Basic algorithm to add one UPC in Blockchain
+contract Consumer Role is Ownable {
+using Roles for Roles Role;
+event Consumer Added (address indexed account);
+event Consumer Removed (address indexed account);
+Roles Role private consumers;
+constructor () public {
+add consumer (message sender);}
+modifier only consumer () {
+require (is the consumer (message sender), ‘Caller is not a consumer.’);}
+a function is Consumer (address account) public view returns (bool) {
+return consumers has (account);}
+function add consumer (address account) public only Owner {
+add consumer (account);}
+function renounce consumer () public only Owner {
+remove consumer (message sender);}
+function add consumer (address account) internal {
+
+93
+
+consumers add (account);
+emit Consumer Added (account);}
+function remove consumer (address account) internal {
+consumers remove(account);
+emit Consumer Removed (account);}}
+
+6.2 User Login Creation in Blockchain
+The user authentication process for accessing a blockchain network is depicted through eight key steps.
+The process begins with users entering their email and unlocking patterns on the mobile app. The mobile
+app generates a new Ethereum login address, which is then confirmed by the authentication server. The
+wallet website then prepares the transaction and sends it to the Ethereum network via MetaMask. Once
+the transaction is confirmed, the user is granted access to the network. These authentication measures,
+shown in Figure 7, ensure secure login using Ethereum-​based identification. The account ID for the
+logged-​in user is 0xca35b7d915458ef540ade6068dfe2f44e8fa733c.
+Figure 7. The login phase authentication steps for getting access to the Blockchain network
+
+After successfully logging in, the user (the medicine owner) can register a new farm by entering
+essential details, such as the farm name, description, and location. The Universal Product Code (UPC)
+links the medicine item to the blockchain, allowing it to be tracked. Upon clicking the ‘Register’ button,
+a MetaMask popup appears, asking the user to confirm the transaction. The transaction details, includ-
+
+94
+
+ing the gas fee, are shown in the popup, ensuring secure interaction with the blockchain network. This
+process is illustrated in Figure 8.
+Figure 8. The Medicine Owner requests to register a new Farm in SC
+
+After confirming the transaction, a new farm with a unique ID is registered on the blockchain. The
+medicine owner can view details of all registered farms by entering the specific farm ID. The farm details
+include the name, location, latitude, longitude, and owner's address. Additionally, after the transaction
+is completed, the status, transaction hash, and gas price are shown, providing transparency regarding
+the transaction process. These updates are recorded in a single block on the blockchain, as illustrated
+in Figure 9.
+Figure 9. The details of a Transaction
+
+95
+
+The process of managing the raw product lifecycle is demonstrated, starting with the registration of
+the farm and adding details about the raw product (e.g., name, vintage year, and notes). After the farm
+registration, the next steps, such as harvesting, packing, and listing the raw product for sale, are carried
+out through blockchain transactions. The transaction details on the right show MetaMask interacting
+with the Ethereum network for confirmation. The status of the raw product is updated as ‘for sale,’ as
+depicted in the raw product lifecycle management section, and the transaction history is recorded for
+transparency. These processes are further illustrated in Figure 10.
+Figure 10. Harvesting, Packing, and adding for sale raw product
+
+96
+
+Once the raw medicine is sent to the central manufacturing unit, the product owner can create a
+new medicine by entering its details into the system. The owner can also find the medicine by its UPC
+when it is ready for further processing. Blockchain tracks this process to ensure that all product details,
+like ownership and transaction history, are securely recorded and accessible. The transaction details are
+displayed in the contract interaction section, confirming the product's creation and current status. This
+process is illustrated in Figure 11.
+Figure 11. Creating medicines and finding them through their UPC
+
+97
+
+In this image, the medicine owner lists the product for sale by entering the product UPC and setting the price. The product is successfully added to the marketplace upon clicking the' Sell' button, as
+indicated by the message ‘ success. Products with UPC = 1 is now For sale in green. The transaction
+details, including the gas fee and transaction confirmation, are recorded on the blockchain, ensuring
+transparency. This process is depicted in Figure 12.
+Figure 12. Medicine added for sale
+
+The buyer searches for available medicines for sale and enters a bid for a specific product by inputting
+the Product UPC and their offer. The transaction is completed if the buyer’s bid exceeds the set price.
+The successful transaction is confirmed with the message ‘ success. The product with UPC = 1 is now
+Sold’, as shown in green. The transaction details, including the amount, gas limit, gas used, and total
+gas fee, are recorded in the blockchain, ensuring transparency. This process is illustrated in Figure 13.
+Figure 13. Medicine is sold to the buyer.
+
+98
+
+Figure 14 The process of managing a product is demonstrated. First, the medicine is shipped to the
+buyer, as indicated by the ‘Ship’ button. Once the buyer receives the product, the status updates to reflect
+that the buyer now owns the product. The buyer can then either sell or consume the product. The transactions are tracked, showcasing the entire journey of the product, from shipment to consumption or resale.
+Figure 14. Shipping to buyer, receiving, and consuming of buyer
+
+Figure 15 shows the transaction history for a supply chain process, detailing various stages of a
+product’s lifecycle. Each entry corresponds to a specific action, such as harvesting, packing, sale, and
+consumption, with unique transaction hashes. This blockchain-​based tracking ensures transparency and
+traceability throughout the supply chain.
+
+99
+
+Figure 15. Transaction History
+
+Figure 16 displays a blockchain-​detectable barcode label for a product, which includes essential
+information like the product name, production date, enterprise name, and website. The barcode and
+QR code enable easy tracking and access to product details through the blockchain system. This label
+ensures efficient product traceability within the supply chain.
+Figure 16. Blockchain-​detectable barcode label for a product
+
+7 CONCLUSION
+In this research, we developed a Blockchain model implemented in solidity to create an Ethereum
+smart contract. We utilized Truffle for development and tested the smart contracts on the ‘localhost’
+and ‘rinkeby’ tenets. While other testnets are available, ‘rinkeby’ was chosen for this study. The proposed supply chain model highlights the advantages and limitations of Blockchain technology in asset
+traceability compared to traditional tracking systems. Consumers can use QR codes to access detailed
+information about products before they are blocked in the network, fostering consumer confidence and
+potentially increasing customer loyalty and revenue. The balance of power between processors and
+retailers may shift through Blockchain implementation. Future research could explore the scalability of
+Blockchain systems, especially in managing a vast number of items, such as UPCs, in a large healthcare
+setting. This paper aims to offer valuable insights for supply chain professionals on how blockchain
+could disrupt existing supply chain models and address challenges to its implementation. Future work
+
+100
+
+may include integrating quality control reports for each batch of medication, using embedded chips for
+regular location and temperature updates, and expanding the system to cover additional medical supplies.
+
+101
+
+REFERENCES
+Adarsh, S., Joseph, S. G., John, F., Lekshmi, M., & Asharaf, S. (2021). A Transparent and Traceable
+Coverage Analysis Model for Vaccine Supply-​Chain Using Blockchain Technology. IT Professional,
+23(4), 28–35. DOI: 10.1109/MITP.2021.3094194
+Adrian Gheorghe, F. S. A. P., & Unal Tatar, O. F. K. (2021). Blockchain for a Resilient, Efficient, and
+Effective Supply Chain: Evidence from Cases. In: Acquisition Research Program.
+Agarwal, U., Rishiwal, V., Tanwar, S., Chaudhary, R., Sharma, G., Bokoro, P. N., & Sharma, R. (2022).
+Blockchain technology for secure supply chain management: A comprehensive review. IEEE Access :
+Practical Innovations, Open Solutions, 10, 85493–85517. DOI: 10.1109/ACCESS.2022.3194319
+Ahmad, A. Y. B., Verma, N., Sarhan, N., Awwad, E. M., Arora, A., & Nyangaresi, V. O. (2024). An IoT
+and Blockchain-​Based Secure and Transparent Supply Chain Management Framework in Smart Cities
+Using Optimal Queue Model. IEEE Access : Practical Innovations, Open Solutions, 12, 51752–51771.
+DOI: 10.1109/ACCESS.2024.3376605
+Ahmed, I., Turki, M., Baklouti, M., Dammak, B., & Alshahrani, A. (2024). Towards an Optimized
+Blockchain-​Based Secure Medical Prescription-​Management System. Future Internet, 16(7), 243. DOI:
+10.3390/fi16070243
+Ahram, T., Sargolzaei, A., Sargolzaei, S., Daniels, J., & Amaba, B. (2017). Blockchain technology
+innovations. Paper presented at the 2017 IEEE Technology & Engineering Management Conference
+(TEMSCON). DOI: 10.1109/TEMSCON.2017.7998367
+Al-​Marridi, A. Z., Mohamed, A., & Erbad, A. (2024). Optimized blockchain-​based healthcare framework
+empowered by mixed multi-​agent reinforcement learning. Journal of Network and Computer Applications, 224, 103834. DOI: 10.1016/j.jnca.2024.103834
+Al-​Sumaidaee, G., Alkhudary, R., Zilic, Z., & Swidan, A. (2023). Performance analysis of a private
+blockchain network built on Hyperledger Fabric for healthcare. Information Processing & Management,
+60(2), 103160. DOI: 10.1016/j.ipm.2022.103160
+Ali, A., Almaiah, M. A., Hajjej, F., Pasha, M. F., Fang, O. H., Khan, R., Teo, J., & Zakarya, M. (2022).
+An industrial IoT-​based blockchain-​enabled secure searchable encryption approach for healthcare systems using neural network. Sensors (Basel), 22(2), 572. DOI: 10.3390/s22020572 PMID: 35062530
+Ali, F., Aloqaily, M., Alfandi, O., & Ozkasap, O. (2020). Cyberphysical Blockchain-​Enabled Peer-​to-​
+Peer Energy Trading. arXiv, arXiv: 2001.00746.
+Alyami, A., Rahman, S., & Yadlapalli, A. (2023). The Effect of Blockchain Technology on Hospital
+Supply Chain Performance. Paper presented at the Proceedings of the International Conference on Industrial Engineering and Operations Management.
+Centobelli, P., Cerchione, R., Del Vecchio, P., Oropallo, E., & Secundo, G. (2022). Blockchain technology
+for bridging trust, traceability and transparency in circular supply chain. Information & Management,
+59(7), 103508. DOI: 10.1016/j.im.2021.103508
+
+102
+
+Chattu, V. K. (2021). A Review of Artificial Intelligence, Big Data, and Blockchain Technology Applications in Medicine and Global Health. Big Data and Cognitive Computing, 5(3), 41. DOI: 10.3390/
+bdcc5030041
+Chiacchio, F., D’Urso, D., Oliveri, L. M., Spitaleri, A., Spampinato, C., & Giordano, D. (2022). A non-​
+fungible token solution for the track and trace of pharmaceutical supply chain. Applied Sciences (Basel,
+Switzerland), 12(8), 4019. DOI: 10.3390/app12084019
+Debnath, B., Shakur, M. S., Bari, A. M., Saha, J., Porna, W. A., Mishu, M. J., Islam, A. R. M. T., &
+Rahman, M. A. (2023). Assessing the critical success factors for implementing industry 4.0 in the pharmaceutical industry: Implications for supply chain sustainability in emerging economies. PLoS One,
+18(6), e0287149. DOI: 10.1371/journal.pone.0287149 PMID: 37319165
+Dhingra, S., Raut, R., Kumar, M., & Naik, B. K. R. (2024). Factors impacting Indian healthcare supply
+chain performance and influence in the public and private sector: The mediating role of blockchain
+technology adoption. Benchmarking. Advance online publication. DOI: 10.1108/BIJ-​10-​2023-​0687
+Ganesan, R., Devi, T., Kumar, S. R., & Gayathri, N. (2022). Securing Healthcare Information Using
+Blockchain Technology: A Deep Insight. In Blockchain Security in Cloud Computing (pp. 253-​263):
+Springer. DOI: 10.1007/978-​3-​030-​70501-​5_12
+Ghadge, A., Bourlakis, M., Kamble, S., & Seuring, S. (2023). Blockchain implementation in pharmaceutical supply chains: A review and conceptual framework. International Journal of Production Research,
+61(19), 6633–6651. DOI: 10.1080/00207543.2022.2125595
+Govindan, K., Nasr, A. K., Saeed Heidary, M., Nosrati-​Abarghooee, S., & Mina, H. (2023). Prioritizing
+adoption barriers of platforms based on blockchain technology from balanced scorecard perspectives
+in healthcare industry: A structural approach. International Journal of Production Research, 61(11),
+3512–3526. DOI: 10.1080/00207543.2021.2013560
+Hasan, K., Chowdhury, M. J. M., Biswas, K., Ahmed, K., Islam, M. S., & Usman, M. (2022). A
+blockchain-​based secure data-​sharing framework for Software Defined Wireless Body Area Networks.
+Computer Networks, 211, 109004. DOI: 10.1016/j.comnet.2022.109004
+Havaeji, H., Dao, T.-​M., & Wong, T. (2023). Supervised learning by evolutionary computation tuning:
+An application to blockchain-​based pharmaceutical supply chain cost model. Mathematics, 11(9), 2021.
+DOI: 10.3390/math11092021
+Hu, H., Chen, K., He, J., & Du, L. (2019). Whole cycle disruption analysis of petroleum supply chain
+(PSC) based on UASNs monitoring. EURASIP Journal on Wireless Communications and Networking,
+2019(1), 119. DOI: 10.1186/s13638-​019-​1426-​0
+Huang, G., & Al Foysal, A. (2021). Blockchain in Healthcare. Technology and Investment, 12(3), 168–181.
+DOI: 10.4236/ti.2021.123010
+Humayun, M., Jhanjhi, N., Hamid, B., & Ahmed, G. (2020). Emerging Smart Logistics and Transportation Using IoT and Blockchain. IEEE Internet of Things Magazine, 3(2), 58–62. DOI: 10.1109/
+IOTM.0001.1900097
+
+103
+
+Jamil, F., Ahmad, S., Whangbo, T. K., Muthanna, A., & Kim, D.-​H. (2022). Improving blockchain performance in clinical trials using intelligent optimal transaction traffic control mechanism in smart healthcare applications. Computers & Industrial Engineering, 170, 108327. DOI: 10.1016/j.cie.2022.108327
+Jraisat, L., Jreissat, M., Upadhyay, A., & Kumar, A. (2023). Blockchain technology: The role of integrated reverse supply chain networks in sustainability. Paper presented at the Supply chain forum: An
+international journal. DOI: 10.1080/16258312.2022.2090853
+Kopyto, M., Lechler, S., Heiko, A., & Hartmann, E. (2020). Potentials of blockchain technology in supply
+chain management: Long-​term judgments of an international expert panel. Technological Forecasting
+and Social Change, 161, 120330. DOI: 10.1016/j.techfore.2020.120330
+Latif, R. M. A., Farhan, M., Rizwan, O., Hussain, M., Jabbar, S., & Khalid, S. (2020). Retail level Blockchain transformation for product supply chain using truffle development platform. Cluster Computing,
+•••, 1–16.
+Latif, R. M. A., Hussain, K., Jhanjhi, N., Nayyar, A., & Rizwan, O. (2020). A remix IDE: Smart
+contract-​based framework for the healthcare sector by using Blockchain technology. Multimedia Tools
+and Applications, •••, 1–24.
+Latif, R. M. A., Iqbal, S., Rizwan, O., Shah, S. U. A., Farhan, M., & Ijaz, F. (2019). Blockchain transforms the retail level by using a supply chain rules and regulation. Paper presented at the 2019 2nd
+International Conference on Communication, Computing and Digital systems (C-​CODE).
+Liu, S., Zhang, R., Liu, C., & Shi, D. (2023). P-​PBFT: An improved blockchain algorithm to support
+large-​scale pharmaceutical traceability. Computers in Biology and Medicine, 154, 106590. DOI: 10.1016/j.
+compbiomed.2023.106590 PMID: 36736098
+Liu, Z., & Zhang, X. (2023). Multimedia and multimodal sensing with edge computing for personalized
+healthcare supply chain system data optimization. Personal and Ubiquitous Computing, 27(3), 955–972.
+DOI: 10.1007/s00779-​022-​01679-​9
+Mahammad, A. B., & Kumar, R. (2023). Scalable and security framework to secure and maintain
+healthcare data using blockchain technology. Paper presented at the 2023 International Conference
+on Computational Intelligence and Sustainable Engineering Solutions (CISES). DOI: 10.1109/CISES58720.2023.10183494
+Meidute-​Kavaliauskiene, I., Yazdi, A. K., & Mehdiabadi, A. (2022). Integration of blockchain technology
+and prioritization of deployment barriers in the blood supply chain. Logistics (Basel), 6(1), 21. DOI:
+10.3390/logistics6010021
+Miriam, H., Doreen, D., Dahiya, D., & Rene Robin, C. (2023). Secured Cyber Security Algorithm for
+Healthcare System Using Blockchain Technology. Intelligent Automation & Soft Computing, 35(2).
+Moosivand, A., Ghatari, A. R., & Rasekh, H. R. (2019). Supply Chain Challenges in Pharmaceutical
+Manufacturing Companies: Using Qualitative System Dynamics Methodology. Iranian Journal of
+Pharmaceutical Research : IJPR, 18(2), 1103. PMID: 31531092
+Nakamoto, S. (2008). Bitcoin. A peer-​to-​peer electronic cash system, 21260.
+
+104
+
+Omar, I. A., Jayaraman, R., Debe, M. S., Salah, K., Yaqoob, I., & Omar, M. (2021). Automating procurement contracts in the healthcare supply chain using blockchain smart contracts. IEEE Access : Practical
+Innovations, Open Solutions, 9, 37397–37409. DOI: 10.1109/ACCESS.2021.3062471
+Pablo, R.-​G. J., Roberto, D.-​P., Victor, S.-​U., Isabel, G.-​R., Paul, C., & Elizabeth, O.-​R. (2022). Big data
+in the healthcare system: A synergy with artificial intelligence and blockchain technology. Journal of
+Integrative Bioinformatics, 19(1), 20200035. DOI: 10.1515/jib-​2020-​0035 PMID: 34412176
+Panda, S. K., & Satapathy, S. C. (2021). Drug traceability and transparency in medical supply chain using
+blockchain for easing the process and creating trust between stakeholders and consumers. Personal and
+Ubiquitous Computing, •••, 1–17.
+Qin, X., Su, Q., Huang, S. H., Wiersma, U. J., & Liu, M. (2019). Service quality coordination contracts
+for online shopping service supply chain with competing service providers: Integrating fairness and
+individual rationality. Operations Research, 19(1), 269–296. DOI: 10.1007/s12351-​016-​0288-​z
+Quayson, M., Avornu, E. K., & Bediako, A. K. (2024). Modeling the enablers of blockchain technology
+implementation for information management in healthcare supply chains. Modern Supply Chain Research
+Applications(ahead-​of-​print).
+Sabri, Y., Harchi, S., & El Kamoun, N. (2022). Managing health supply chain using blockchain technology: State of art challenges and solution. International Journal of Reconfigurable Embedded Systems,
+11(3), 258. DOI: 10.11591/ijres.v11.i3.pp258-​264
+Saha, E., Rathore, P., & Gigi, A. (2021). Utilizing Blockchain Technology to Manage Functional Areas
+in Healthcare Systems. In The Big Data-​Driven Digital Economy: Artificial and Computational Intelligence (pp. 125-​139): Springer. DOI: 10.1007/978-​3-​030-​73057-​4_11
+Saha, E., Rathore, P., Parida, R., & Rana, N. P. (2022). The interplay of emerging technologies in pharmaceutical supply chain performance: An empirical investigation for the rise of Pharma 4.0. Technological
+Forecasting and Social Change, 181, 121768. DOI: 10.1016/j.techfore.2022.121768
+Senna, P., Reis, A., Dias, A., Coelho, O., Guimarães, J., & Eliana, S. (2021). Healthcare supply chain
+resilience framework: Antecedents, mediators, consequents. Production Planning and Control, •••, 1–15.
+Shah, Y., Verma, Y., Sharma, U., Sampat, A., & Kulkarni, V. (2023). Supply chain for safe & timely
+distribution of medicines using blockchain & machine learning. Paper presented at the 2023 5th International Conference on Smart Systems and Inventive Technology (ICSSIT). DOI: 10.1109/ICSSIT55814.2023.10061049
+Sneha, S., Panjwani, A., Lade, B., Randolph, J., & Vickery, M. (2021). Alleviating Challenges Related
+to FDA-​Approved Medical Wearables Using Blockchain Technology. IT Professional, 23(4), 21–27.
+DOI: 10.1109/MITP.2021.3072535
+statista. (2024). Bitcoin (BTC) price per day from April 6, 2022 to December 30, 2024 Retrieved from
+https://​www​.statista​.com/​statistics/​326707/​bitcoin​-​​price​-​​index/​
+
+105
+
+Sumalatha, M., Raghuraman, D., Surya, S., & Monisha, V. (2024). Secured Blockchain Technology for
+Medical Supply Chain (SB-​MSC). Paper presented at the 2024 International Conference on Advances in Data
+Engineering and Intelligent Computing Systems (ADICS). DOI: 10.1109/ADICS58448.2024.10533582
+Tseng, L., Yao, X., Otoum, S., Aloqaily, M., & Jararweh, Y. (2020). Blockchain-​based database in an IoT
+environment: Challenges, opportunities, and analysis. Cluster Computing, 23(3), 1–15. DOI: 10.1007/
+s10586-​020-​03138-​7
+Vatambeti, R., Krishna, E. P., Karthik, M. G., & Damera, V. K. (2024). Securing the medical data using
+enhanced privacy preserving based blockchain technology in Internet of Things. Cluster Computing,
+27(2), 1625–1637. DOI: 10.1007/s10586-​023-​04056-​0
+Viegas, C. V., Bond, A., Vaz, C. R., & Bertolo, R. J. (2019). Reverse flows within the pharmaceutical
+supply chain: A classificatory review from the perspective of end-​of-​use and end-​of-​life medicines.
+Journal of Cleaner Production, 238, 117719. DOI: 10.1016/j.jclepro.2019.117719
+Wan, Y., & Huang, H. (2023). Adoption and optimization of blockchain technology in the regulation
+of Class II vaccines. IEEE Access : Practical Innovations, Open Solutions, 11, 84607–84619. DOI:
+10.1109/ACCESS.2023.3301772
+Wang, Y., Han, J. H., & Beynon-​Davies, P. (2019). Understanding blockchain technology for future
+supply chains: A systematic literature review and research agenda. Supply Chain Management, 24(1),
+62–84. DOI: 10.1108/SCM-​03-​2018-​0148
+Yaqoob, I., Salah, K., Jayaraman, R., & Al-​Hammadi, Y. (2022). Blockchain for healthcare data management: Opportunities, challenges, and future recommendations. Neural Computing & Applications,
+34(14), 1–16. DOI: 10.1007/s00521-​020-​05519-​w
+
+106
+
+

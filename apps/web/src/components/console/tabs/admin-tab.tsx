@@ -69,7 +69,7 @@ export function AdminTab({
       await tx.wait();
       const roleName =
         ROLE_OPTIONS.find((r) => r.hash === selectedRole)?.label ?? "unknown";
-      onStatus(`Registered ${actorAddress.slice(0, 10)}... as ${roleName}.`);
+      onStatus(`Actor ${actorAddress.slice(0, 10)}... registered as ${roleName}.`);
     });
   }
 
@@ -79,7 +79,7 @@ export function AdminTab({
       await tx.wait();
       const roleName =
         ROLE_OPTIONS.find((r) => r.hash === selectedRole)?.label ?? "unknown";
-      onStatus(`Revoked ${roleName} role from ${actorAddress.slice(0, 10)}...`);
+      onStatus(`${roleName} role revoked from ${actorAddress.slice(0, 10)}...`);
     });
   }
 
@@ -97,8 +97,8 @@ export function AdminTab({
       await tx.wait();
       onStatus(
         blacklistAction
-          ? `Blacklisted ${blacklistAddress.slice(0, 10)}...`
-          : `Removed ${blacklistAddress.slice(0, 10)}... from blacklist.`,
+          ? `Address ${blacklistAddress.slice(0, 10)}... added to blacklist.`
+          : `Address ${blacklistAddress.slice(0, 10)}... removed from blacklist.`,
       );
     });
   }
@@ -107,7 +107,7 @@ export function AdminTab({
     await withContract(async (contract) => {
       const tx = pause ? await contract.pause() : await contract.unpause();
       await tx.wait();
-      onStatus(pause ? "Contract paused." : "Contract unpaused.");
+      onStatus(pause ? "Contract paused successfully." : "Contract unpaused successfully.");
     });
   }
 
@@ -137,154 +137,160 @@ export function AdminTab({
   }
 
   return (
-    <div className="grid gap-px border border-line bg-line xl:grid-cols-2">
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">REGISTER / REVOKE ACTOR</p>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div className="govt-card">
+        <div className="govt-card-header">Register / Revoke Actor</div>
         {!hasRole && (
-          <p className="mt-2 font-data text-danger">NO ADMIN ROLE DETECTED</p>
+          <p className="text-sm text-govt-red font-bold mb-3">NO ADMIN ROLE DETECTED</p>
         )}
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="font-data text-muted">ROLE</span>
+        <div className="grid gap-3">
+          <div className="govt-form-group">
+            <label htmlFor="roleSelect">Role Assignment</label>
             <select
+              id="roleSelect"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             >
               {ROLE_OPTIONS.map((opt) => (
                 <option key={opt.hash} value={opt.hash}>
-                  {opt.label.toUpperCase()}
+                  {opt.label}
                 </option>
               ))}
             </select>
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">ADDRESS</span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="actorAddress">Wallet Address</label>
             <input
+              id="actorAddress"
               value={actorAddress}
               onChange={(e) => setActorAddress(e.target.value)}
               placeholder="0x..."
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
+          </div>
         </div>
         <div className="mt-4 flex gap-2">
           <button
             type="button"
             disabled={disabled}
             onClick={registerActor}
-            className="border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
+            className="govt-btn govt-btn-primary"
           >
-            REGISTER
+            Register Actor
           </button>
           <button
             type="button"
             disabled={disabled}
             onClick={revokeActor}
-            className="border border-line bg-panel px-4 py-2 font-data text-foreground disabled:opacity-50"
+            className="govt-btn govt-btn-secondary"
           >
-            REVOKE
+            Revoke Role
           </button>
         </div>
       </div>
 
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">AUTHORITY THRESHOLD</p>
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="font-data text-muted">NEW THRESHOLD</span>
-            <input
-              type="number"
-              min="1"
-              value={thresholdInput}
-              onChange={(e) => setThresholdInput(e.target.value)}
-              placeholder="e.g. 2"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
-            />
-          </label>
+      <div className="govt-card">
+        <div className="govt-card-header">Authority Threshold Configuration</div>
+        <div className="govt-form-group">
+          <label htmlFor="thresholdInput">New Threshold Value</label>
+          <input
+            id="thresholdInput"
+            type="number"
+            min="1"
+            value={thresholdInput}
+            onChange={(e) => setThresholdInput(e.target.value)}
+            placeholder="e.g. 2"
+            className="govt-input"
+          />
         </div>
         <button
           type="button"
           disabled={disabled}
           onClick={updateThreshold}
-          className="mt-4 border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
+          className="govt-btn govt-btn-primary"
         >
-          SET THRESHOLD
+          Set Threshold
         </button>
       </div>
 
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">BLACKLIST MANAGEMENT</p>
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="font-data text-muted">ADDRESS</span>
+      <div className="govt-card">
+        <div className="govt-card-header">Blacklist Management</div>
+        <div className="grid gap-3">
+          <div className="govt-form-group">
+            <label htmlFor="blacklistAddress">Wallet Address</label>
             <input
+              id="blacklistAddress"
               value={blacklistAddress}
               onChange={(e) => setBlacklistAddress(e.target.value)}
               placeholder="0x..."
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="flex items-center gap-2 font-data text-muted">
+          </div>
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
+              id="blacklistToggle"
               checked={blacklistAction}
               onChange={(e) => setBlacklistAction(e.target.checked)}
-              className="h-4 w-4 border-line accent-accent"
+              className="h-4 w-4"
             />
-            {blacklistAction ? "ADD TO BLACKLIST" : "REMOVE FROM BLACKLIST"}
-          </label>
+            <label htmlFor="blacklistToggle" className="text-sm font-bold text-govt-blue">
+              {blacklistAction ? "Add to Blacklist" : "Remove from Blacklist"}
+            </label>
+          </div>
         </div>
         <button
           type="button"
           disabled={disabled}
           onClick={updateBlacklist}
-          className="mt-4 border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
+          className="govt-btn govt-btn-primary mt-4"
         >
-          UPDATE BLACKLIST
+          Update Blacklist
         </button>
       </div>
 
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">CONTRACT CONTROLS</p>
+      <div className="govt-card">
+        <div className="govt-card-header">Contract Emergency Controls</div>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
             disabled={disabled}
             onClick={() => togglePause(true)}
-            className="border border-line bg-danger px-4 py-2 font-data text-white disabled:opacity-50"
+            className="govt-btn govt-btn-danger"
           >
-            PAUSE
+            Pause Contract
           </button>
           <button
             type="button"
             disabled={disabled}
             onClick={() => togglePause(false)}
-            className="border border-line bg-success px-4 py-2 font-data text-white disabled:opacity-50"
+            className="govt-btn govt-btn-success"
           >
-            UNPAUSE
+            Unpause Contract
           </button>
           <button
             type="button"
-            disabled={!account || isWorking}
+            disabled={Boolean(!account || isWorking)}
             onClick={loadRoleCounts}
-            className="border border-line bg-panel px-4 py-2 font-data text-foreground disabled:opacity-50"
+            className="govt-btn govt-btn-secondary"
           >
-            LOAD ROLE COUNTS
+            Load Role Counts
           </button>
         </div>
         {roleCounts && (
-          <div className="mt-4 border border-line bg-panel-alt p-4">
-            <div className="grid gap-1 font-data text-sm">
-              {Object.entries(roleCounts).map(([role, count]) => (
-                <p key={role}>
-                  <span className="text-muted">{role.toUpperCase()} :</span>{" "}
-                  <span className="text-foreground">
-                    {count} MEMBER{count !== 1 ? "S" : ""}
-                  </span>
-                </p>
-              ))}
-            </div>
+          <div className="mt-4 border border-govt-border bg-govt-gray-light p-3">
+            <p className="text-sm font-bold text-govt-blue mb-2">Role Member Counts</p>
+            <table className="govt-table">
+              <tbody>
+                {Object.entries(roleCounts).map(([role, count]) => (
+                  <tr key={role}>
+                    <td className="font-bold">{role}</td>
+                    <td className="text-center">{count} Member{count !== 1 ? "s" : ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

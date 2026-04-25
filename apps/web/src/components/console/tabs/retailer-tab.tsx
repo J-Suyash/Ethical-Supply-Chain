@@ -59,7 +59,7 @@ export function RetailerTab({ account, hasRole, onStatus }: RetailerTabProps) {
       const custodian = nextCustodian || account || ethers.ZeroAddress;
       const tx = await contract.advanceStage(productId, custodian);
       await tx.wait();
-      onStatus(`Advanced product ${productSeed} through retail stage.`);
+      onStatus(`Product ${productSeed} advanced through retail stage.`);
     });
   }
 
@@ -79,42 +79,44 @@ export function RetailerTab({ account, hasRole, onStatus }: RetailerTabProps) {
         rejections: String(s.rejectionCount),
         custodian: s.currentCustodian,
       });
-      onStatus(`Loaded product: ${productSeed}`);
+      onStatus(`Product data loaded: ${productSeed}`);
     });
   }
 
   return (
-    <div className="grid gap-px border border-line bg-line xl:grid-cols-2">
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">RETAIL ACTIONS</p>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div className="govt-card">
+        <div className="govt-card-header">Retail Stage Actions</div>
         {!hasRole && (
-          <p className="mt-2 font-data text-danger">
+          <p className="text-sm text-govt-red font-bold mb-3">
             NO RETAILER ROLE DETECTED
           </p>
         )}
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="font-data text-muted">PRODUCT SEED</span>
+        <div className="grid gap-3">
+          <div className="govt-form-group">
+            <label htmlFor="retProductSeed">Product Identification Seed</label>
             <input
+              id="retProductSeed"
               value={productSeed}
               onChange={(e) => setProductSeed(e.target.value)}
               placeholder="e.g. batch-2024-001"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
-          <label className="grid gap-1">
-            <span className="font-data text-muted">
-              NEXT CUSTODIAN ADDRESS (OPTIONAL)
-            </span>
+          </div>
+          <div className="govt-form-group">
+            <label htmlFor="retNextCustodian">Next Custodian Address (Optional)</label>
             <input
+              id="retNextCustodian"
               value={nextCustodian}
               onChange={(e) => setNextCustodian(e.target.value)}
               placeholder="0x... (leave empty for self)"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
+              className="govt-input"
             />
-          </label>
+          </div>
           {productId && (
-            <p className="break-all font-data text-muted">ID : {productId}</p>
+            <p className="text-xs font-mono break-all text-govt-gray-dark">
+              <span className="font-bold">Product ID:</span> {productId}
+            </p>
           )}
         </div>
         <div className="mt-4 flex gap-2">
@@ -122,37 +124,38 @@ export function RetailerTab({ account, hasRole, onStatus }: RetailerTabProps) {
             type="button"
             disabled={disabled}
             onClick={advanceStage}
-            className="border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
+            className="govt-btn govt-btn-primary"
           >
-            ADVANCE STAGE
+            Advance Stage
           </button>
           <button
             type="button"
             disabled={!account || isWorking}
             onClick={readProduct}
-            className="border border-line bg-panel px-4 py-2 font-data text-foreground disabled:opacity-50"
+            className="govt-btn govt-btn-secondary"
           >
-            READ PRODUCT
+            Read Product
           </button>
         </div>
       </div>
 
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">PRODUCT STATUS</p>
+      <div className="govt-card">
+        <div className="govt-card-header">Product Retail Status</div>
         {snapshot ? (
-          <div className="mt-4 border border-line bg-panel-alt p-4">
-            <div className="grid gap-1 font-data text-sm">
-              {Object.entries(snapshot).map(([key, value]) => (
-                <p key={key}>
-                  <span className="text-muted">{key.toUpperCase()} :</span>{" "}
-                  <span className="text-foreground">{value}</span>
-                </p>
-              ))}
-            </div>
+          <div className="mt-3">
+            <table className="govt-table">
+              <tbody>
+                <tr><td className="font-bold w-1/3">Current Stage</td><td>{snapshot.stage}</td></tr>
+                <tr><td className="font-bold">Validation Status</td><td>{snapshot.validation}</td></tr>
+                <tr><td className="font-bold">Approvals</td><td>{snapshot.approvals}</td></tr>
+                <tr><td className="font-bold">Rejections</td><td>{snapshot.rejections}</td></tr>
+                <tr><td className="font-bold">Current Custodian</td><td className="font-mono text-xs break-all">{snapshot.custodian}</td></tr>
+              </tbody>
+            </table>
           </div>
         ) : (
-          <p className="mt-4 font-data text-muted">
-            LOAD A PRODUCT TO SEE ITS RETAIL STATUS
+          <p className="mt-3 text-sm text-govt-gray-dark">
+            Load a product to view its retail status.
           </p>
         )}
       </div>

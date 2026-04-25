@@ -7,9 +7,27 @@ import QRCode from "qrcode";
 import { contractConfig, proposedAbi } from "@/lib/contracts";
 import { getBrowserProvider, ensureDemoNetwork } from "@/lib/wallet";
 
+const STAGES = ["Created", "Manufactured", "Distributed", "Retail", "Sold"];
+
+function StatusBadge({ status }: { status: number }) {
+  if (status === 1) {
+    return (
+      <span className="govt-badge govt-badge-success">APPROVED</span>
+    );
+  }
+  if (status === 2) {
+    return (
+      <span className="govt-badge govt-badge-danger">REJECTED</span>
+    );
+  }
+  return (
+    <span className="govt-badge govt-badge-warning">PENDING REVIEW</span>
+  );
+}
+
 export function VerificationConsole() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState("Connect MetaMask to read the deployed contract.");
+  const [status, setStatus] = useState("Connect MetaMask wallet to read the deployed contract.");
   const [productSeed, setProductSeed] = useState(
     searchParams.get("seed") || "demo-product-001",
   );
@@ -34,7 +52,7 @@ export function VerificationConsole() {
 
   async function readProposed() {
     if (!contractConfig.proposedAddress) {
-      setStatus("Proposed contract address is missing.");
+      setStatus("Proposed contract address is not configured.");
       return;
     }
 
@@ -60,115 +78,178 @@ export function VerificationConsole() {
         manufacturedAt: new Date(Number(summary.manufacturedAt) * 1000).toLocaleDateString(),
         expiryAt: new Date(Number(summary.expiryAt) * 1000).toLocaleDateString(),
       });
-      setStatus(`Loaded product ${productSeed}.`);
+      setStatus(`Product data loaded successfully for seed: ${productSeed}`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to read product.");
+      setStatus(error instanceof Error ? error.message : "Failed to read product data.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <section className="border border-line bg-panel">
-      <div className="border-b border-line px-6 py-5">
-        <p className="font-data text-muted">PUBLIC VERIFICATION</p>
-        <h1 className="font-display mt-2 text-5xl">VERIFY PRODUCT</h1>
-        <p className="mt-3 max-w-lg text-sm text-muted">
-          Look up any product on the Ethical Supply Chain contract. No transaction
-          required — read-only query against the deployed Sepolia contract.
-        </p>
-      </div>
+    <div className="py-4">
+      <div className="govt-section">
+        <div className="govt-section-header flex items-center gap-2">
+          <span className="h-2 w-2 bg-govt-saffron" />
+          Product Verification Portal
+        </div>
+        <div className="govt-section-body">
+          <p className="text-sm mb-4">
+            Search for any registered product in the Ethical Supply Chain system. Enter the product
+            identification seed or scan the QR code on the product packaging. This is a read-only
+            query — no blockchain transaction is required.
+          </p>
 
-      <div className="border-b border-line bg-foreground px-6 py-3">
-        <p className="font-data text-background">STATUS : {status}</p>
-      </div>
-
-      <div className="grid border-b border-line lg:grid-cols-2">
-        <div className="border-r border-line p-6">
-          <p className="font-data text-muted">PRODUCT LOOKUP</p>
-          <div className="mt-4 grid gap-3">
-            <label className="grid gap-1">
-              <span className="font-data text-muted">PRODUCT SEED</span>
-              <input
-                value={productSeed}
-                onChange={(e) => setProductSeed(e.target.value)}
-                className="border border-line bg-panel px-3 py-2 font-data text-foreground"
-              />
-            </label>
-            <div className="border border-line-muted bg-panel-alt px-3 py-2">
-              <p className="break-all font-data text-muted">
-                DERIVED ID : {productId}
-              </p>
-            </div>
+          <div className="govt-status-bar mb-4">
+            STATUS: {status}
           </div>
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => void readProposed()}
-            className="mt-4 border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
-          >
-            READ PRODUCT
-          </button>
 
-          {proposedResult && (
-            <div className="mt-4 border border-line bg-panel-alt p-4">
-              <div className="grid gap-1 font-data text-sm">
-                {Object.entries(proposedResult).map(([key, value]) => (
-                  <p key={key}>
-                    <span className="text-muted">{key.toUpperCase()} :</span>{" "}
-                    <span className="text-foreground">{value}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-bold text-govt-blue mb-3 border-b border-govt-border pb-2">
+                Product Search
+              </h3>
+              <div className="govt-form-group">
+                <label htmlFor="productSeed">Product Identification Seed</label>
+                <input
+                  id="productSeed"
+                  type="text"
+                  value={productSeed}
+                  onChange={(e) => setProductSeed(e.target.value)}
+                  className="govt-input"
+                  placeholder="e.g. demo-product-001"
+                />
+              </div>
+              <div className="bg-govt-gray-light border border-govt-border p-3 mb-4">
+                <p className="text-xs font-mono break-all">
+                  <span className="font-bold">Derived Product ID:</span><br />
+                  {productId}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => void readProposed()}
+                className="govt-btn govt-btn-primary"
+              >
+                {isLoading ? "Searching..." : "Search Product"}
+              </button>
+
+              {proposedResult && (
+                <div className="mt-4 border border-govt-border bg-govt-gray-light">
+                  <h4 className="bg-govt-blue text-white px-3 py-2 text-sm font-bold">
+                    Product Details
+                  </h4>
+                  <table className="govt-table">
+                    <tbody>
+                      <tr>
+                        <td className="font-bold w-1/3">Product Name</td>
+                        <td>{proposedResult.name || "—"}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Batch Number</td>
+                        <td>{proposedResult.batchNumber || "—"}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Current Stage</td>
+                        <td>
+                          Stage {proposedResult.stage} —{" "}
+                          {STAGES[Number(proposedResult.stage)] || "Unknown"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Validation Status</td>
+                        <td>
+                          <StatusBadge status={Number(proposedResult.validationStatus)} />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Approvals</td>
+                        <td>{proposedResult.approvalCount}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Rejections</td>
+                        <td>{proposedResult.rejectionCount}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Current Custodian</td>
+                        <td className="font-mono text-xs break-all">{proposedResult.currentCustodian}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Manufacturing Date</td>
+                        <td>{proposedResult.manufacturedAt}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Expiry Date</td>
+                        <td>{proposedResult.expiryAt}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold">Certificate Hash</td>
+                        <td className="font-mono text-xs break-all">{proposedResult.certificateHash}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold text-govt-blue mb-3 border-b border-govt-border pb-2">
+                QR Code Verification
+              </h3>
+              <p className="text-sm text-govt-gray-dark mb-4">
+                Scan this QR code using a mobile device to open the product verification page
+                with the current product seed pre-filled.
+              </p>
+              <div className="flex flex-col items-start gap-4">
+                {qrDataUrl ? (
+                  <div className="border border-govt-border bg-white p-3 inline-block">
+                    <img
+                      src={qrDataUrl}
+                      alt="QR code for verification"
+                      width={200}
+                      height={200}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-[200px] w-[200px] items-center justify-center border border-govt-border bg-white text-sm text-govt-gray-dark">
+                    Generating QR Code...
+                  </div>
+                )}
+                <div className="w-full">
+                  <label className="text-xs font-bold text-govt-gray-dark">Verification URL</label>
+                  <p className="text-xs font-mono break-all bg-govt-gray-light border border-govt-border p-2 mt-1">
+                    {qrLink}
                   </p>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6">
-          <p className="font-data text-muted">QR VERIFICATION LINK</p>
-          <p className="mt-2 text-sm text-muted">
-            Scan this QR code to open the verification page with the current product
-            seed pre-filled.
-          </p>
-          <div className="mt-4 flex flex-col items-start gap-4 md:flex-row md:items-center">
-            {qrDataUrl ? (
-              <img
-                src={qrDataUrl}
-                alt="QR code for verification"
-                width={220}
-                height={220}
-                className="border border-line bg-white p-3"
-              />
-            ) : (
-              <div className="flex h-[220px] w-[220px] items-center justify-center border border-line bg-white font-data text-muted">
-                GENERATING...
-              </div>
-            )}
-            <div className="space-y-3">
-              <p className="max-w-md break-all border border-line-muted bg-panel-alt px-4 py-3 font-data text-sm text-muted">
-                {qrLink}
-              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2">
-        <div className="border-r border-line px-6 py-4">
-          <p className="font-data text-foreground">QUERY METHOD</p>
-          <p className="mt-2 text-sm text-muted">
-            Enter a human-readable seed. The keccak256 hash of the seed is used as
-            the on-chain product ID.
-          </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="govt-section">
+          <div className="govt-section-header">How Verification Works</div>
+          <div className="govt-section-body text-sm">
+            <p>
+              Enter a human-readable product identification seed. The system computes the keccak256
+              hash of the seed to derive the on-chain product ID. Product data is read directly from
+              the deployed smart contract on the Sepolia testnet.
+            </p>
+          </div>
         </div>
-        <div className="px-6 py-4">
-          <p className="font-data text-foreground">PANEL USE</p>
-          <p className="mt-2 text-sm text-muted">
-            Use this page during demos when you need quick proof of recorded state
-            without sending a new transaction.
-          </p>
+        <div className="govt-section">
+          <div className="govt-section-header">Usage Guidelines</div>
+          <div className="govt-section-body text-sm">
+            <p>
+              This verification portal is intended for demonstration and public transparency purposes.
+              No wallet connection or transaction submission is required for product lookup. Results
+              reflect the current on-chain state at the time of query.
+            </p>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -75,7 +75,7 @@ export function AuthorityTab({
         account,
       )) as boolean;
       setAlreadyVoted(voted);
-      onStatus(`Loaded summary for ${productSeed}.`);
+      onStatus(`Product summary loaded for ${productSeed}.`);
     });
   }
 
@@ -100,77 +100,79 @@ export function AuthorityTab({
   }
 
   return (
-    <div className="grid gap-px border border-line bg-line xl:grid-cols-2">
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">REVIEW PRODUCT</p>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div className="govt-card">
+        <div className="govt-card-header">Review Product for Validation</div>
         {!hasRole && (
-          <p className="mt-2 font-data text-danger">
+          <p className="text-sm text-govt-red font-bold mb-3">
             NO AUTHORITY ROLE DETECTED
           </p>
         )}
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="font-data text-muted">PRODUCT SEED</span>
-            <input
-              value={productSeed}
-              onChange={(e) => setProductSeed(e.target.value)}
-              placeholder="e.g. batch-2024-001"
-              className="border border-line bg-panel px-3 py-2 font-data text-foreground"
-            />
-          </label>
-          {productId && (
-            <p className="break-all font-data text-muted">ID : {productId}</p>
-          )}
+        <div className="govt-form-group">
+          <label htmlFor="authProductSeed">Product Identification Seed</label>
+          <input
+            id="authProductSeed"
+            value={productSeed}
+            onChange={(e) => setProductSeed(e.target.value)}
+            placeholder="e.g. batch-2024-001"
+            className="govt-input"
+          />
         </div>
+        {productId && (
+          <p className="text-xs font-mono break-all text-govt-gray-dark mt-1">
+            <span className="font-bold">Product ID:</span> {productId}
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
             disabled={!account || isWorking}
             onClick={loadSummary}
-            className="border border-line bg-panel px-4 py-2 font-data text-foreground disabled:opacity-50"
+            className="govt-btn govt-btn-secondary"
           >
-            LOAD SUMMARY
+            Load Summary
           </button>
           <button
             type="button"
             disabled={disabled || alreadyVoted === true}
             onClick={approve}
-            className="border border-line bg-foreground px-4 py-2 font-data text-background disabled:opacity-50"
+            className="govt-btn govt-btn-success"
           >
-            APPROVE
+            Approve Product
           </button>
           <button
             type="button"
             disabled={disabled || alreadyVoted === true}
             onClick={reject}
-            className="border border-line bg-danger px-4 py-2 font-data text-white disabled:opacity-50"
+            className="govt-btn govt-btn-danger"
           >
-            REJECT
+            Reject Product
           </button>
         </div>
         {alreadyVoted === true && (
-          <p className="mt-3 font-data text-muted">
-            YOU HAVE ALREADY VOTED ON THIS PRODUCT
+          <p className="mt-3 text-sm text-govt-gray-dark font-bold">
+            You have already voted on this product.
           </p>
         )}
       </div>
 
-      <div className="bg-panel p-5">
-        <p className="font-data text-foreground">VALIDATION STATUS</p>
+      <div className="govt-card">
+        <div className="govt-card-header">Validation Status</div>
         {summary ? (
-          <div className="mt-4 border border-line bg-panel-alt p-4">
-            <div className="grid gap-1 font-data text-sm">
-              {Object.entries(summary).map(([key, value]) => (
-                <p key={key}>
-                  <span className="text-muted">{key.toUpperCase()} :</span>{" "}
-                  <span className="text-foreground">{value}</span>
-                </p>
-              ))}
-            </div>
+          <div className="mt-3">
+            <table className="govt-table">
+              <tbody>
+                <tr><td className="font-bold w-1/3">Current Stage</td><td>{summary.stage}</td></tr>
+                <tr><td className="font-bold">Validation Status</td><td>{summary.validation}</td></tr>
+                <tr><td className="font-bold">Approvals</td><td>{summary.approvals}</td></tr>
+                <tr><td className="font-bold">Rejections</td><td>{summary.rejections}</td></tr>
+                <tr><td className="font-bold">Current Custodian</td><td className="font-mono text-xs break-all">{summary.custodian}</td></tr>
+              </tbody>
+            </table>
           </div>
         ) : (
-          <p className="mt-4 font-data text-muted">
-            ENTER A PRODUCT SEED AND CLICK LOAD SUMMARY
+          <p className="mt-3 text-sm text-govt-gray-dark">
+            Enter a product seed and click &quot;Load Summary&quot; to view validation status.
           </p>
         )}
       </div>

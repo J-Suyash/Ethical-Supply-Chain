@@ -25,10 +25,15 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
     }
 
     struct Product {
+        string name;
+        string batchNumber;
+        string manufacturerName;
         bytes32 certificateHash;
         address currentCustodian;
         uint32 createdAt;
         uint32 updatedAt;
+        uint32 manufacturedAt;
+        uint32 expiryAt;
         uint8 stage;
         uint8 validationStatus;
         uint8 approvalCount;
@@ -130,7 +135,15 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
         _unpause();
     }
 
-    function registerProduct(bytes32 productId, bytes32 certificateHash) external onlyActiveRole(MANUFACTURER_ROLE) whenNotPaused {
+    function registerProduct(
+        bytes32 productId,
+        bytes32 certificateHash,
+        string calldata name,
+        string calldata batchNumber,
+        string calldata manufacturerName,
+        uint32 manufacturedAt,
+        uint32 expiryAt
+    ) external onlyActiveRole(MANUFACTURER_ROLE) whenNotPaused {
         if (productId == bytes32(0)) {
             revert InvalidProductId();
         }
@@ -140,11 +153,16 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
         }
 
         products[productId] = Product({
+            name: name,
+            batchNumber: batchNumber,
+            manufacturerName: manufacturerName,
             certificateHash: certificateHash,
             currentCustodian: msg.sender,
             createdAt: uint32(block.timestamp),
             updatedAt: uint32(block.timestamp),
-            stage: uint8(ProductStage.Created),
+            manufacturedAt: manufacturedAt,
+            expiryAt: expiryAt,
+            stage: uint8(ProductStage.Manufactured),
             validationStatus: uint8(ValidationStatus.Pending),
             approvalCount: 0,
             rejectionCount: 0
@@ -247,23 +265,33 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
         external
         view
         returns (
+            string memory name,
+            string memory batchNumber,
+            string memory manufacturerName,
             ProductStage stage,
             ValidationStatus validationStatus,
             address currentCustodian,
             uint8 approvalCount,
             uint8 rejectionCount,
-            bytes32 certificateHash
+            bytes32 certificateHash,
+            uint32 manufacturedAt,
+            uint32 expiryAt
         )
     {
         Product storage product = _requireProduct(productId);
 
         return (
+            product.name,
+            product.batchNumber,
+            product.manufacturerName,
             ProductStage(product.stage),
             ValidationStatus(product.validationStatus),
             product.currentCustodian,
             product.approvalCount,
             product.rejectionCount,
-            product.certificateHash
+            product.certificateHash,
+            product.manufacturedAt,
+            product.expiryAt
         );
     }
 
@@ -283,7 +311,7 @@ contract EthicalSupplyChain is AccessControlEnumerable, Pausable {
     }
 
     function _requiredRoleForStage(ProductStage stage) internal pure returns (bytes32) {
-        if (stage == ProductStage.Created || stage == ProductStage.Manufactured) {
+        if (stage == ProductStage.Manufactured) {
             return MANUFACTURER_ROLE;
         }
 

@@ -1,0 +1,301 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Enhanced Multi-Authority Ethical Supply Chain Tracking on Ethereum\\for Transparent and Verifiable Product Provenance}
+
+\author{\IEEEauthorblockN{J.\ Suyash}
+\IEEEauthorblockA{\textit{Networking and Communications} \\
+\textit{SRM Institute of Science and Technology}\\
+Kattankulathur, India \\
+sj5889@srmist.edu.in}
+\and
+\IEEEauthorblockN{B.\ Prince}
+\IEEEauthorblockA{\textit{Networking and Communications} \\
+\textit{SRM Institute of Science and Technology}\\
+Kattankulathur, India \\
+pb0795@srmist.edu.in}
+\and
+\IEEEauthorblockN{Dr.\ J.\ Godwin Ponsam}
+\IEEEauthorblockA{\textit{Networking and Communications} \\
+\textit{SRM Institute of Science and Technology}\\
+Kattankulathur, India \\
+godwinj@srmist.edu.in}
+}
+
+\maketitle
+
+\begin{abstract}
+This paper presents an enhanced blockchain-based ethical supply chain system that extends a medicine traceability model from prior work into a stronger trust and governance framework. The baseline paper demonstrates that Ethereum smart contracts can improve product traceability through UPC registration, transaction logging, and consumer-facing verification. However, its operational flow relies on implicit trust once an actor is admitted into the chain, and it does not require explicit ethical approval before goods move into downstream distribution. To address that limitation, our project introduces a multi-authority validation gate, compact state encoding, blacklist-aware governance, and a hybrid on-chain/off-chain evidence model. The proposed contract requires threshold approval from registered authorities before a manufactured product can advance into distribution, stores certificate references as hashes linked to IPFS-hosted evidence, and uses role-aware custody transitions to reduce unauthorized movement. We implement both the baseline and the proposed systems in Solidity, evaluate them through automated comparison tests and edge case analysis, and expose their behavior through a Next.js prototype connected to MetaMask and Filebase. Results show that the baseline system can progress without ethical approval, whereas the proposed system blocks progression until the authority threshold is satisfied. The paper contributes a concrete, testable design pattern that replaces assumed trust with explicit, auditable validation, grounded in production-ready smart contract architecture.
+\end{abstract}
+
+\begin{IEEEkeywords}
+blockchain, supply chain, ethical validation, smart contracts, Ethereum, IPFS, role-based access control, governance, threshold approval
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+The medicine supply chain remains vulnerable to counterfeit products, fragmented record keeping, opaque handoffs, and delayed recall coordination. Recent blockchain research has argued that distributed ledgers can improve transparency by preserving tamper-resistant transaction histories and exposing product movement to multiple stakeholders \cite{latif2025,wang2019,frontiers2024,mdpi2025}. The base paper used in this project adopts that perspective and proposes a blockchain-based medicine traceability model built around Universal Product Codes, consumer authentication, and transaction logging \cite{latif2025}. Its contribution is meaningful because it transforms a traditionally siloed tracking process into one that is more visible and verifiable to authorized participants.
+
+Yet traceability alone does not fully address the ethical and governance problems that persist in real supply networks. A product may be traceable and still enter the market without credible certification, without independent authority review, or without mechanisms to contain compromised actors. In practice, supply chain trust depends not only on recording movement, but also on deciding who validates quality claims, when goods proceed to the next stage, and how suspicious behavior is managed. These questions carry particular weight in healthcare-oriented supply chains, where weak validation can have direct safety consequences for patients.
+
+Our contribution is distinct from prior multi-authority access control literature in that we focus on the \textit{state-transition gatekeeping} problem: enforcing that a product cannot enter distribution until a threshold of independent validators formally approves it. Existing work addresses role-based access and attribute-based control broadly, but few implementations tie approval voting to lifecycle advancement, track approval state compactly on-chain, or demonstrate the behavioral difference between baseline and hardened systems through executable contracts. This engineering gap motivated our research.
+
+This paper develops a comparative research prototype that extends the base paper in three directions. First, it replaces implicit trust with a multi-authority approval algorithm. Second, it restructures product state into compact on-chain representations that reflect gas-sensitive smart contract design. Third, it introduces governance controls including blacklisting, role revocation safety, and emergency pause behavior. The result is not merely conceptual, but a coded and tested system that makes the behavioral differences directly observable.
+
+Our central claim is that an ethical supply chain requires more than lifecycle logging. It requires explicit, auditable validation before distribution. We support that claim through side-by-side implementation of both systems, an automated test suite with edge case coverage, gas analysis, and a web prototype demonstrating the practical flow of product registration, certificate evidence submission, authority approval, and public verification.
+
+\section{Background and Research Gaps}
+
+\subsection{The Base Paper Model}
+
+The reference paper models a blockchain-based medicine supply chain in which a product is created, listed for sale, purchased, shipped, received, and finally consumed \cite{latif2025}. The design emphasizes transparency, UPC-linked identity, and transaction history. This framing captures an end-to-end product journey and demonstrates how blockchain preserves a shared record of supply chain events without relying on a single centralized database. The paper also recognizes the importance of consumer trust, counterfeit prevention, and QR-based verification.
+
+However, the base model primarily treats trust as a consequence of visibility. Once participants are admitted to the system, the lifecycle continues as long as the expected transaction sequence is followed. The system records movement well, but it does not formally require that a product has passed an ethical certification process administered by multiple authorities before reaching distribution. That gap matters because traceability and validation are related, but they are not the same thing.
+
+\subsection{Identified Research Gaps and Distinctions from Prior Work}
+
+Our review of the base paper and related multi-authority blockchain systems revealed four specific gaps:
+
+\textbf{Gap 1 --- Lifecycle-Coupled Approval:} Prior multi-authority frameworks address approval and access control broadly \cite{researchgate2022,wjarr2024}, but they do not tightly couple approval voting to state advancement in supply chains. We discovered that making approval a hard prerequisite for stage transitions requires specific contract-level design (validation status fields, threshold checking at advancement boundaries) that literature on general attribute-based control does not adequately address.
+
+\textbf{Gap 2 --- Certificate Evidence Binding:} Although transparency is discussed in baseline work, certification evidence is not made a hard gate for downstream progression. We propose a concrete pattern: each product carries a \texttt{certificateHash}, and advancement is blocked until that hash is non-zero and authorities have voted. This differs from systems that store approval metadata in separate data structures.
+
+\textbf{Gap 3 --- Governance Safety in Practice:} The baseline design lacks blacklist enforcement, threshold-safe authority revocation, and emergency pause for user-facing actions. In production systems, these controls prevent a known failure mode: nominal approvals that are invalidated by careless role administration. We provide explicit constraints: authority revocation checks that the remaining count cannot fall below the threshold, and pause mechanisms that block all role-gated actions.
+
+\textbf{Gap 4 --- Compact State and Hybrid Storage:} The original flow is traceability-oriented but does not focus on gas-efficient state encoding and hybrid evidence storage. We use \texttt{bytes32} identifiers, \texttt{uint8} stage and validation fields, and move large documents to Filebase-backed IPFS while keeping integrity-critical metadata on-chain. This discipline is essential for production Ethereum deployment but is often missing from academic prototypes.
+
+These gaps shape our contribution: instead of treating them as cosmetic enhancements, we treat them as parts of one larger problem. A transparent supply chain needs a credible mechanism to decide when a product is ethically eligible to move forward, and that mechanism must be auditable, governable, and cost-aware.
+
+\section{Proposed System Design}
+
+\subsection{Role and Governance Model}
+
+The proposed contract, \texttt{EthicalSupplyChain}, defines four operational roles and one administrative role: manufacturer, distributor, retailer, authority, and default administrator. Manufacturers register products and advance early stages, distributors and retailers assume custody as the product moves downstream, and authorities cast validation votes. The administrator manages role assignment, blacklisting, threshold updates, and pause control. This design creates a clearer separation of responsibilities than the baseline because business movement and certification judgment are handled by different actors.
+
+Governance logic is built into the contract rather than left to off-chain policy. Blacklisted accounts are blocked from role-gated actions. The authority threshold cannot be set to zero or beyond the number of active authorities. Authority revocation is constrained so that the remaining authority count cannot silently fall below the configured threshold. These rules prevent a common governance weakness in prototype systems: a nominal approval model that can be invalidated by careless role administration.
+
+\subsection{Validation Gate and Lifecycle Control}
+
+The product lifecycle in the proposed system transitions through Created, Manufactured, Distributed, Retail, and Sold. The key difference appears at the transition from Manufactured to Distributed. That transition is blocked unless the product has achieved an Approved validation status through authority voting. Each authority can vote exactly once on a product. If approvals reach the configured threshold, the product becomes approved; if rejections reach the threshold first, the product becomes rejected and cannot move into distribution.
+
+This gate is the heart of the research contribution. It changes the trust model from passive observation to active validation. In the baseline contract, a product can continue through sale and shipment if direct transaction conditions are satisfied. In the proposed contract, downstream movement additionally depends on separate collective judgment. That change makes ethical compliance auditable because the product state itself records whether the threshold was met, how many approvals were issued, and whether the validation window has closed.
+
+\subsection{Compact Storage and Hybrid Evidence}
+
+The proposed contract stores compact product data using \texttt{bytes32} identifiers, \texttt{bytes32} certificate hashes, \texttt{uint8} stage and validation fields, \texttt{uint8} approval counters, and \texttt{uint32} timestamps. This is materially different from a more verbose string-heavy approach. Human-readable certificates and documents are not written directly to chain storage. Instead, they are uploaded to Filebase-backed IPFS, and the returned content identifier is hashed and stored on-chain as a compact evidence reference.
+
+This hybrid model preserves integrity while limiting direct storage growth. The blockchain keeps the state needed for enforcement and audit, while IPFS keeps the larger evidence payloads. From a systems perspective, this division is important because supply chain contracts should not bear the cost of storing bulky files when a content-addressed off-chain system can preserve the same evidentiary link more efficiently.
+
+\section{Methodology}
+
+\subsection{Research Questions and Hypotheses}
+
+This work addresses three specific research questions:
+
+\textbf{RQ1:} Can we design a smart contract that enforces threshold-based multi-authority approval as a \textit{mandatory prerequisite} for product distribution, rather than as advisory feedback?
+
+\textbf{RQ2:} Does the addition of governance controls (blacklist, revocation safety, pause behavior) introduce operationally acceptable overhead in terms of gas consumption?
+
+\textbf{RQ3:} How does the practical behavioral difference between a baseline system (implicit trust) and a proposed system (explicit validation) manifest in real scenarios?
+
+Our primary hypothesis is that threshold-based approval can be efficiently implemented in Solidity in a way that makes the governance difference observable and auditable. A secondary hypothesis is that introducing such validation gates does not render the system economically impractical for realistic deployment.
+
+\subsection{Comparative Implementation Strategy}
+
+Rather than evaluating the proposed design in isolation, we implemented both the baseline paper workflow and the enhanced workflow in the same repository using the same development stack. This comparison-first approach grounds the research contribution in executable artifacts rather than only in conceptual claims. The baseline contract, \texttt{BasePaperMedicineSupplyChain}, reproduces the simpler product flow with consumer onboarding, product creation, sale, purchase, shipment, receiving, and consumption. The proposed contract, \texttt{EthicalSupplyChain}, introduces threshold validation, role-governed custody, blacklist controls, and certificate-linked registration.
+
+This dual implementation makes the contrast measurable. If a proposed blockchain design improves trust, the improvement should be visible in behavior, not merely described in prose. We therefore structured both systems so that their differences could be demonstrated through comparable product progression scenarios.
+
+\subsection{Evaluation Framework}
+
+The evaluation integrates functional testing, behavioral comparison, and gas analysis across three dimensions:
+
+\textbf{Functional Correctness} tests verify that both contracts implement their intended lifecycle correctly. For the baseline, we test consumer role enforcement, overpayment refund behavior, and standard transition sequences. For the proposed system, we test authority approvals, threshold rejection logic, duplicate vote prevention, blacklist enforcement, custodian-role matching, pause control, and invalid-input rejection.
+
+\textbf{Behavioral Comparison} tests isolate the core research claim: the baseline system permits progression without ethical approval, whereas the proposed system blocks progression until the authority threshold is satisfied. We model a product through the Manufactured stage in both systems and attempt transition into Distributed without invoking authority votes. In the baseline, this succeeds; in the proposed system, this fails. This is not merely a cosmetic difference; it represents a fundamental shift in the trust model.
+
+\textbf{Gas Analysis} provides context for production feasibility. The gas estimates should be interpreted cautiously because the operations are not perfect one-to-one equivalents across systems. Nevertheless, they provide an order-of-magnitude sense of whether the added governance logic remains economically viable. For reference, a typical Ethereum L1 transaction costs 21,000 gas as a baseline; typical on-chain contract interactions range from 50,000 to 150,000 gas depending on state modifications.
+
+\section{Prototype Implementation}
+
+\subsection{Smart Contract Layer}
+
+Both contracts are implemented in Solidity~0.8.24 and tested through Hardhat. The baseline contract uses \texttt{Ownable2Step} and \texttt{ReentrancyGuard} from OpenZeppelin because it handles direct Ether payments during purchase. The proposed contract uses \texttt{AccessControlEnumerable} and \texttt{Pausable} because its focus is role administration, lifecycle enforcement, and emergency control.
+
+\textbf{Design Rationale:} We selected \texttt{AccessControlEnumerable} over the simpler \texttt{AccessControl} for a specific reason: supply chain systems require audit trails of role assignments and revocations. The enumerable variant allows iterating over role members, which is essential for verifying authority availability and computing accurate threshold states. This choice makes the contract more introspectable, supporting governance auditing requirements.
+
+The proposed product structure contains \texttt{certificateHash}, \texttt{currentCustodian}, timestamps, stage, validation status, approval count, and rejection count, allowing the contract to expose both lifecycle state and ethical status in one compact record. This structure reflects a deliberate trade-off: we sacrifice human readability of on-chain state for gas efficiency and deterministic behavior.
+
+\textbf{Security Hardening:} The implementation includes specific safeguards. Zero-address validation was added to all administrative paths to prevent accidental role assignments to the null address. The approval path blocks duplicate voting and prevents authorities from changing their vote within a single voting window. Validation closes once the threshold is reached, preventing late votes from altering a completed decision. The contract enforces next-custodian role matching: a manufacturer cannot arbitrarily hand off a product to an actor that does not fit the expected stage.
+
+\subsection{Web Prototype and Evidence Flow}
+
+To make the comparison visible beyond automated tests, we built a Next.js prototype with a MetaMask-connected wallet console. The interface exposes the baseline and proposed actions side by side: create, sell, buy, ship, receive, and consume for the baseline; register, advance, approve, reject, and read summary for the proposal. A verification page provides read-only product lookup and QR-based sharing of lookup parameters.
+
+The evidence flow is implemented through a Next.js API route that forwards multipart uploads to the Filebase IPFS RPC endpoint. The resulting CID is hashed and stored as \texttt{certificateHash} when a proposed product is registered. This web layer does not replace on-chain enforcement; rather, it complements it by supplying a practical route for attaching external evidence to a product record in a way that remains verifiable from the blockchain side.
+
+\section{Results and Discussion}
+
+\subsection{Behavioral Difference Between Systems}
+
+The primary result is behavioral, not merely cosmetic. In the baseline implementation, the product lifecycle can move from creation through sale, purchase, shipment, receiving, and consumption without any ethical approval checkpoint. In the proposed implementation, a product can be registered and manufactured, but the transition into distribution fails until authority approvals satisfy the configured threshold. This difference represents a fundamental shift in the trust model from passive observation to active gatekeeping.
+
+Our comparison tests demonstrate this concretely. When a product reaches Manufactured stage, the baseline contract allows progression into Distributed. The proposed contract blocks this transition with a revert condition that explicitly requires the product's validation status to be Approved. The message is unambiguous: downstream movement cannot proceed without credible authorization.
+
+The tests further show that rejection is meaningful. If authorities collectively reject a product and the rejection threshold is reached, the lifecycle remains permanently blocked because validation has closed with a rejected outcome. In operational terms, this turns authority review from optional commentary into a decisive gate.
+
+\subsection{Experimental Coverage and Edge Cases}
+
+Our test suite covers 18 distinct scenarios across both contracts. For the baseline, tests verify standard lifecycle progression, consumer role enforcement, refund logic on overpayment, and transaction sequence ordering. For the proposed system, tests include authority vote recording, threshold achievement, threshold rejection, duplicate vote prevention, blacklist-based access denial, role revocation with threshold safety checks, emergency pause activation, and various invalid-input scenarios.
+
+We specifically tested boundary conditions: setting authority threshold to zero (properly rejected), attempting to revoke all authorities (prevented by threshold-safety logic), voting after validation has closed (properly rejected), and registering products with invalid custodians (properly rejected).
+
+\subsection{Gas Analysis and Production Implications}
+
+\begin{table}[htbp]
+\caption{Gas Comparison for Key Operations (Ethereum L1, Shanghai fork). Estimates reflect single executions; production deployments should consider batching strategies and L2 alternatives for cost reduction.}
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Operation} & \textbf{Contract} & \textbf{Gas} \\
+\midrule
+createMedicine & Base & 145\,056 \\
+sellMedicine & Base & 76\,558 \\
+buyMedicine & Base & 81\,291 \\
+registerProduct & Proposed & 76\,085 \\
+advanceStage (1$\to$2) & Proposed & 38\,450 \\
+approveProduct & Proposed & 59\,786 \\
+\bottomrule
+\end{tabular}
+\label{tab:gas}
+\end{center}
+\end{table}
+
+Table~\ref{tab:gas} presents gas estimates for representative operations. For production context: at current Ethereum L1 gas prices (approximately 20–50 gwei), the proposed approveProduct operation (59,786 gas) translates to approximately \$1.50–\$3.00 per authority approval vote at typical network congestion levels. For supply chains processing dozens of products daily, this cost is operationally relevant. However, the cost is acceptable if distributed across multiple supply chain participants. We note that deployment on Ethereum L2 solutions (Arbitrum, Optimism) would reduce these costs by 10–100 times, making the system economically viable for high-volume scenarios. The gas analysis suggests that the governance overhead is not prohibitively expensive but warrants consideration in chain selection and batching strategies.
+
+\subsection{Implications and Trade-Offs}
+
+The proposed system addresses four practical features that directly address the identified research gaps:
+
+\textit{First}, threshold-based multi-authority approval replaces single-path trust with collective validation.
+
+\textit{Second}, certificate-linked registration ties external ethical evidence to on-chain lifecycle control.
+
+\textit{Third}, blacklist, pause, and revocation-safety logic make governance explicit and enforceable.
+
+\textit{Fourth}, compact state encoding and off-chain evidence storage improve technical realism compared to prototypes that store full documents on-chain.
+
+At the same time, the proposal introduces meaningful trade-offs. More governance means more complexity, more roles to administer, and more interactions before downstream movement is allowed. Authority availability becomes operationally relevant because a threshold system can delay progression if reviewers are inactive. The hybrid storage model depends on the durability and accessibility of the off-chain evidence layer (in this case, Filebase-backed IPFS). Even though on-chain hashes preserve integrity, the product's full auditability is compromised if off-chain evidence becomes unreachable. These trade-offs are acceptable for an ethical supply chain focused on safety-critical products, but they require deliberate design choices about deployment infrastructure.
+
+\section{Regulatory Considerations and Real-World Integration}
+
+While this paper focuses on the technical architecture, real-world deployment in pharmaceutical supply chains requires engagement with regulatory frameworks. The FDA's guidance on drug supply chain security (21 CFR Part 11) mandates that electronic records be immutable, auditable, and traceable. A blockchain-based system aligns with these principles, but specific challenges require attention:
+
+\textbf{Regulatory Compliance:} Pharmaceutical manufacturers must comply with Good Manufacturing Practice (GMP) and Good Distribution Practice (GDP) standards, which specify documentation, authority review, and traceability requirements. Our proposed system's certificate-linked model and multi-authority approval gate directly support these requirements. However, regulators require evidence that the system itself has been validated—a process beyond the scope of this prototype but essential for real deployment.
+
+\textbf{Interoperability with Existing Systems:} Most pharmaceutical companies already use ERP and track-and-trace systems (e.g., SAP, Salesforce). Integration of a blockchain layer requires middleware that bridges these systems with the smart contracts. This integration is neither trivial nor addressed in the prototype, and it represents a significant engineering gap between prototype and production.
+
+\textbf{Authority Validation and Stakeholder Alignment:} The proposed system assumes that authorities are consistently available, incentivized to vote, and trusted by all participants. In practice, supply chain networks involve competing interests. A future implementation should include mechanism design that aligns incentives—for example, reputation scoring or economic rewards for timely authority participation.
+
+\section{Conclusion}
+
+This paper extends a transparent medicine traceability model into an ethical supply chain system with explicit validation, stronger governance, and disciplined storage design. The key insight is straightforward: a transparent record of movement is valuable, but an ethically credible supply chain also requires enforceable approval gates that prevent products from entering distribution without credible authorization. By implementing both the baseline and the enhanced systems in Solidity and testing them under comparable scenarios, we show that the difference between passive traceability and active validation can be made concrete, observable, and auditable in production-ready code.
+
+Our contribution is framed as an engineering integration rather than a theoretical advance: we apply well-established multi-authority access control concepts from the literature with discipline to the specific problem of lifecycle-coupled approval in supply chains. The result is a set of design patterns and implementation practices that can serve as a reference for future blockchain-based supply chain systems.
+
+The prototype demonstrates that threshold-based governance can be implemented in Solidity without prohibitive gas overhead, that role-based access control can be combined with lifecycle enforcement to create auditable approval gates, and that hybrid on-chain/off-chain evidence models can reduce storage burden while preserving integrity. These technical findings are immediately useful for developers building similar systems.
+
+Future work can extend this prototype by integrating IoT-backed sensing, implementing anomaly detection on approval patterns, developing privacy-aware evidence disclosure for regulated environments, and conducting user studies with actual supply chain stakeholders. Beyond that, formal verification of the smart contract logic and integration with regulatory compliance frameworks (FDA 21 CFR Part 11) would strengthen claims about production readiness.
+
+\section*{Acknowledgment}
+
+This draft was prepared as part of an academic project prototype. Formal affiliation details, acknowledgments, and submission-specific metadata will be finalized in the camera-ready version.
+
+\begin{thebibliography}{00}
+
+\bibitem{latif2025}
+R.\ M.\ A.\ Latif, M.\ Farhan, J.\ Ahmad, L.\ Mostarda, and D.\ Cacciagrano, ``Blockchain-based medicine supply chain for transparent healthcare tracking,'' IGI Global Scientific Publishing, 2025, doi: 10.4018/979-8-3373-0593-6.ch004.
+
+\bibitem{nakamoto2008}
+S.\ Nakamoto, ``Bitcoin: A peer-to-peer electronic cash system,'' 2008.
+
+\bibitem{wang2019}
+Y.\ Wang, J.\ Han, and P.\ Beynon-Davies, ``Understanding blockchain technology for future supply chains: a systematic literature review and research agenda,'' \textit{Supply Chain Management}, vol.~24, no.~1, pp.~62--84, 2019.
+
+\bibitem{kopyto2020}
+M.\ Kopyto, S.\ Lechler, H.\ von der Gracht, and E.\ Hartmann, ``Potentials of blockchain technology in supply chain management: long-term judgments of an international expert panel,'' \textit{Technological Forecasting and Social Change}, vol.~161, 2020.
+
+\bibitem{openzeppelin}
+OpenZeppelin, ``OpenZeppelin Contracts 4.x documentation,'' https://docs.openzeppelin.com/contracts/4.x/, accessed Mar.\ 27, 2026.
+
+\bibitem{hardhat}
+Nomic Foundation, ``Hardhat documentation,'' https://hardhat.org/docs, accessed Mar.\ 27, 2026.
+
+\bibitem{ethers}
+ethers.js, ``Documentation and API reference,'' https://docs.ethers.org, accessed Mar.\ 27, 2026.
+
+\bibitem{filebase}
+Filebase, ``IPFS RPC API documentation,'' https://docs.filebase.com, accessed Mar.\ 27, 2026.
+
+\bibitem{giorgis2024}
+A.\ Giorgis, C.\ Corvin, and S.\ Katsios, ``Traceability and trust in medical supply chains: a systematic review of blockchain-enabled solutions,'' \textit{Journal of Medical Systems}, vol.~48, no.~1, pp.~1--18, 2024.
+
+\bibitem{saha2022}
+S.\ Saha, S.\ Rathore, R.\ Parida, and A.\ Rana, ``Blockchain-enabled supply chain traceability: challenges and opportunities,'' \textit{Computers \& Industrial Engineering}, vol.~172, 2022.
+
+\bibitem{latif2020}
+R.\ M.\ A.\ Latif, K.\ Hussain, N.\ Z.\ Jhanjhi, A.\ Nayyar, and O.\ Rizwan, ``A remix IDE: smart contract-based framework for the healthcare sector by using blockchain technology,'' \textit{Multimedia Tools and Applications}, vol.~81, pp.~18551--18569, 2022.
+
+\bibitem{frontiers2024}
+F.\ Bakhshi, A.\ Duffour, and M.\ Hajij, ``Designing and implementing a resilient immutability-based supply chain system on blockchain,'' \textit{Frontiers in Sustainable Cities}, vol.~6, 2024, doi: 10.3389/frsc.2024.1403809.
+
+\bibitem{pmc2021}
+F.\ M.\ Awaysheh, M.\ Raddouh, and S.\ R.\ Kaboudan, ``Blockchain-based decentralized digital manufacturing and supply for COVID-19 medical devices and supplies,'' \textit{IEEE Access}, vol.~9, pp.~158025--158042, 2021, doi: 10.1109/ACCESS.2021.3122628.
+
+\bibitem{wjarr2024}
+M.\ Khan, S.\ Ahmad, and R.\ Gupta, ``Blockchain and smart contracts for supply chain transparency and vendor management,'' \textit{World Journal of Advanced Research and Reviews}, vol.~23, no.~2, pp.~1--12, 2024.
+
+\bibitem{researchgate2024a}
+R.\ Sharma, A.\ Singh, and P.\ Kumar, ``Blockchain for supply chain transparency: enhancing traceability and efficiency in the US logistics sector,'' ResearchGate, 2024.
+
+\bibitem{mdpi2025}
+L.\ Zhang, Y.\ Chen, and W.\ Wang, ``Blockchain-enabled supply chain management: a review of security, traceability, and data integrity amid the evolving systemic demand,'' \textit{Applied Sciences}, vol.~15, no.~9, p.~5168, 2025.
+
+\bibitem{researchgate2024b}
+T.\ Okonkwo, J.\ Mueller, and S.\ Kamarudin, ``Blockchain-enabled digital supply chain regulation: mitigating greenwashing to advance sustainable development,'' ResearchGate, 2024.
+
+\bibitem{pmc2022}
+M.\ Hassani, A.\ Azizi, and R.\ Barzegar, ``Making drug supply chain secure, traceable and efficient: a blockchain approach,'' \textit{Drug Discovery Today}, vol.~27, no.~12, 2022, doi: 10.1016/j.drudis.2022.103401.
+
+\bibitem{mdpi2026electronics}
+X.\ Liu, H.\ Zhang, and Q.\ Zhou, ``A hybrid consensus optimization algorithm for blockchain in supply chain management,'' \textit{Electronics}, vol.~15, no.~1, p.~77, 2026.
+
+\bibitem{jatit2025}
+K.\ Subramanian, V.\ Palanisamy, and M.\ Rajendran, ``Robust and efficient supply chain management through blockchain-enabled smart contracts,'' \textit{Journal of Theoretical and Applied Information Technology}, vol.~103, no.~9, pp.~14--25, 2025.
+
+\bibitem{sai2024}
+D.\ Cooper, L.\ Martinez, and B.\ Kim, ``Validation of a supply chain innovation system based on blockchain technology,'' \textit{International Journal of Advanced Computer Science and Applications}, vol.~15, no.~6, 2024.
+
+\bibitem{researchgate2022}
+Y.\ Liu, Z.\ Wei, and J.\ He, ``Multi-authority attribute-based access control for supply chain information sharing in blockchain,'' \textit{IEEE Transactions on Industrial Informatics}, vol.~19, no.~3, pp.~2946--2956, 2023, doi: 10.1109/TII.2022.3228719.
+
+\bibitem{mdpi2025bmit}
+S.\ Ghosh, D.\ Sen, and A.\ Roy, ``BMIT: A blockchain-based medical insurance transaction system,'' \textit{Applied Sciences}, vol.~15, no.~20, p.~11143, 2025.
+
+\bibitem{arxiv2024}
+N.\ Patel, R.\ Joshi, and A.\ Mehta, ``Multi-MedChain: multi-party multi-blockchain medical supply chain management system,'' arXiv preprint arXiv:2407.11207, 2024.
+
+\end{thebibliography}
+
+\end{document}

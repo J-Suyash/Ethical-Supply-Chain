@@ -1,0 +1,11 @@
+\section{Regulatory Considerations and Real-World Integration}
+
+While this paper focuses on the technical architecture, real-world deployment in pharmaceutical supply chains requires engagement with regulatory frameworks. The FDA's guidance on drug supply chain security (21 CFR Part 11) mandates that electronic records be immutable, auditable, and traceable. A blockchain-based system aligns with these principles, but specific challenges require attention:
+
+\textbf{Regulatory Compliance:} Pharmaceutical manufacturers must comply with Good Manufacturing Practice (GMP) and Good Distribution Practice (GDP) standards, which specify documentation, authority review, and traceability requirements. Our proposed system's certificate-linked model and multi-authority approval gate directly support these requirements. However, regulators require evidence that the system itself has been validated—a process beyond the scope of this prototype but essential for real deployment.
+
+\textbf{Interoperability with Existing Systems:} Most pharmaceutical companies already use ERP and track-and-trace systems (e.g., SAP, Salesforce). Integration of a blockchain layer requires middleware that bridges these systems with the smart contracts. This integration is neither trivial nor addressed in the prototype, and it represents a significant engineering gap between prototype and production.
+
+\textbf{Authority Validation and Stakeholder Alignment:} The proposed system assumes that authorities are consistently available, incentivized to vote, and trusted by all participants. In practice, supply chain networks involve competing interests. A future implementation should include mechanism design that aligns incentives—for example, reputation scoring or economic rewards for timely authority participation.
+
+These considerations do not invalidate the technical contribution, but they clarify the boundary between what this prototype demonstrates (feasible governance logic) and what remains necessary for real-world deployment (regulatory validation, system integration, stakeholder coordination).

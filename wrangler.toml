@@ -1,6 +1,0 @@
-name = "ethical-supply-chain"
-compatibility_date = "2024-09-23"
-pages_build_output_dir = "apps/web/out"
-
-[vars]
-FILEBASE_RPC_API_KEY = "REI2OTQwMzcwMDA5NDk0RTQwOTM6c21pZnhzSGZHQ2c2MlpOemhRZXM4cFdVV2FuMmxLNGpKaWltTFg1azpjZXJ0LXN0b3Jl"

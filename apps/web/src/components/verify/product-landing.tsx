@@ -91,7 +91,13 @@ function fetchReducer(_state: FetchState, action: FetchAction): FetchState {
   }
 }
 
-export function ProductLanding({ seed }: { seed: string }) {
+export function ProductLanding({
+  seed,
+  initialCid = "",
+}: {
+  seed: string;
+  initialCid?: string;
+}) {
   const hasSeed = Boolean(seed && contractConfig.proposedAddress);
   const [state, dispatch] = useReducer(
     fetchReducer,
@@ -100,6 +106,7 @@ export function ProductLanding({ seed }: { seed: string }) {
       : { status: "idle" as const, product: null, error: "No product identification seed specified." },
   );
   const [showDetails, setShowDetails] = useState(false);
+  const [certificateCidInput, setCertificateCidInput] = useState(initialCid);
 
   const productId = useMemo(
     () => ethers.id(seed || "demo-product-001"),
@@ -152,6 +159,13 @@ export function ProductLanding({ seed }: { seed: string }) {
   const { product, error } = state;
   const loading = state.status === "loading";
   const isExpired = product ? product.expiryAt * 1000 < currentTime : false;
+
+  const currentCertificateHash = product?.certificateHash ?? "";
+  const normalizedCid = certificateCidInput.trim();
+  const hasCertificateCid = normalizedCid.length > 0;
+  const certificateUrl = hasCertificateCid
+    ? `https://steady-teal-squid.myfilebase.com/ipfs/${normalizedCid}`
+    : "";
 
   return (
     <main className="min-h-screen bg-govt-bg">
@@ -336,6 +350,65 @@ export function ProductLanding({ seed }: { seed: string }) {
                   </table>
                 </div>
               )}
+            </div>
+
+            <div className="govt-section">
+              <div className="govt-section-header">Certificate Document (IPFS)</div>
+              <div className="govt-section-body">
+                <div className="govt-form-group">
+                  <label htmlFor="certificateCidInput">Certificate CID</label>
+                  <input
+                    id="certificateCidInput"
+                    type="text"
+                    value={certificateCidInput}
+                    onChange={(e) => setCertificateCidInput(e.target.value)}
+                    placeholder="Paste IPFS CID from upload response"
+                    className="govt-input"
+                  />
+                    <p className="text-xs text-govt-gray-dark mt-2">
+                      This certificate preview is loaded from CID in the verification link or manually pasted here.
+                    </p>
+                </div>
+
+                {!hasCertificateCid && (
+                  <div className="border border-govt-border bg-govt-gray-light p-3 text-sm">
+                    <p className="text-govt-red font-bold">CID required for preview</p>
+                    <p className="text-govt-gray-dark mt-1">
+                      Add the certificate CID to load PDF preview from Filebase IPFS.
+                    </p>
+                    <p className="text-xs mt-2 font-mono break-all">
+                      On-chain certificate hash: {currentCertificateHash || "—"}
+                    </p>
+                  </div>
+                )}
+
+                {hasCertificateCid && certificateUrl && (
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        href={certificateUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="govt-btn govt-btn-primary"
+                      >
+                        Open Certificate PDF
+                      </a>
+                      <p className="text-xs text-govt-gray-dark break-all">CID: {normalizedCid}</p>
+                    </div>
+                    <div className="border border-govt-border bg-white rounded-sm overflow-hidden">
+                      <iframe
+                        title="Product certificate preview"
+                        src={certificateUrl}
+                        className="w-full"
+                        style={{ minHeight: "70vh" }}
+                      />
+                    </div>
+                    <p className="text-xs text-govt-gray-dark">
+                      On some mobile browsers, inline PDF preview may not be supported. Use &quot;Open Certificate PDF&quot; to view in the device PDF viewer.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <p className="text-center text-xs text-govt-gray-dark py-2">

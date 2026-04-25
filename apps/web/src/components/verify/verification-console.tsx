@@ -34,6 +34,7 @@ export function VerificationConsole() {
   const [proposedResult, setProposedResult] = useState<Record<string, string> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState("");
+  const [certificateCidInput, setCertificateCidInput] = useState("");
 
   const productId = useMemo(
     () => ethers.id(productSeed || "demo-product-001"),
@@ -42,9 +43,12 @@ export function VerificationConsole() {
 
   const qrLink = useMemo(() => {
     const params = new URLSearchParams({ seed: productSeed });
+    if (certificateCidInput.trim()) {
+      params.set("cid", certificateCidInput.trim());
+    }
     if (typeof window === "undefined") return `/verify?${params.toString()}`;
     return `${window.location.origin}/verify?${params.toString()}`;
-  }, [productSeed]);
+  }, [productSeed, certificateCidInput]);
 
   useEffect(() => {
     void QRCode.toDataURL(qrLink, { margin: 1, width: 220 }).then(setQrDataUrl);
@@ -118,6 +122,17 @@ export function VerificationConsole() {
                   onChange={(e) => setProductSeed(e.target.value)}
                   className="govt-input"
                   placeholder="e.g. demo-product-001"
+                />
+              </div>
+              <div className="govt-form-group">
+                <label htmlFor="certificateCid">Certificate CID (optional for PDF preview)</label>
+                <input
+                  id="certificateCid"
+                  type="text"
+                  value={certificateCidInput}
+                  onChange={(e) => setCertificateCidInput(e.target.value)}
+                  className="govt-input"
+                  placeholder="e.g. Qm..."
                 />
               </div>
               <div className="bg-govt-gray-light border border-govt-border p-3 mb-4">
@@ -197,10 +212,10 @@ export function VerificationConsole() {
               <h3 className="text-sm font-bold text-govt-blue mb-3 border-b border-govt-border pb-2">
                 QR Code Verification
               </h3>
-              <p className="text-sm text-govt-gray-dark mb-4">
-                Scan this QR code using a mobile device to open the product verification page
-                with the current product seed pre-filled.
-              </p>
+                <p className="text-sm text-govt-gray-dark mb-4">
+                  Scan this QR code using a mobile device to open the product verification page
+                  with the current product seed and certificate CID pre-filled.
+                </p>
               <div className="flex flex-col items-start gap-4">
                 {qrDataUrl ? (
                   <div className="border border-govt-border bg-white p-3 inline-block">

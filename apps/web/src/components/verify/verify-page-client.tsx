@@ -8,9 +8,10 @@ import { ProductLanding } from "@/components/verify/product-landing";
 export function VerifyPageClient() {
   const searchParams = useSearchParams();
   const seed = searchParams.get("seed");
+  const cid = searchParams.get("cid") ?? "";
 
   if (seed) {
-    return <ProductLanding seed={seed} />;
+    return <ProductLanding seed={seed} initialCid={cid} />;
   }
 
   return (

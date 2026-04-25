@@ -39,5 +39,10 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await response.json();
-  return NextResponse.json({ cid: result.Hash });
+  const cid = result.Hash as string;
+  return NextResponse.json({
+    cid,
+    fileName: file.name,
+    gatewayUrl: `https://steady-teal-squid.myfilebase.com/ipfs/${cid}`,
+  });
 }

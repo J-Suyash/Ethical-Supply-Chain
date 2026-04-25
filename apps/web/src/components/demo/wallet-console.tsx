@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Contract, ethers } from "ethers";
+import QRCode from "qrcode";
 import { contractConfig, proposedAbi } from "@/lib/contracts";
 import {
   getBrowserProvider,
@@ -50,6 +51,7 @@ export function WalletConsole() {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [proposedSnapshot, setProposedSnapshot] =
     useState<ProposedProductSnapshot | null>(null);
+  const [verifyQrDataUrl, setVerifyQrDataUrl] = useState("");
 
   useEffect(() => {
     setIsHydrated(true);
@@ -85,6 +87,43 @@ export function WalletConsole() {
     () => ethers.id(uploadResult?.cid || certificateSource || "demo-certificate"),
     [certificateSource, uploadResult],
   );
+  const verifyUrl = useMemo(() => {
+    const params = new URLSearchParams({ seed: productSeed || "demo-product-001" });
+    const cid = uploadResult?.cid || "";
+    if (cid) params.set("cid", cid);
+    if (typeof window === "undefined") return `/verify?${params.toString()}`;
+    return `${window.location.origin}/verify?${params.toString()}`;
+  }, [productSeed, uploadResult]);
+
+  useEffect(() => {
+    if (!verifyUrl) {
+      setVerifyQrDataUrl("");
+      return;
+    }
+    void QRCode.toDataURL(verifyUrl, { margin: 1, width: 220 }).then(setVerifyQrDataUrl);
+  }, [verifyUrl]);
+
+  async function copyVerifyLink() {
+    if (!verifyUrl) return;
+    try {
+      await navigator.clipboard.writeText(verifyUrl);
+      setStatus("Consumer verify URL copied to clipboard.");
+    } catch {
+      setStatus("Failed to copy verify URL. Please copy manually.");
+    }
+  }
+
+  function downloadQr() {
+    if (!verifyQrDataUrl) {
+      setStatus("QR code is not ready yet.");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = verifyQrDataUrl;
+    a.download = `verify-${productSeed || "product"}.png`;
+    a.click();
+    setStatus("QR code downloaded.");
+  }
 
   async function connectWallet() {
     try {
@@ -352,6 +391,47 @@ export function WalletConsole() {
                 <span className="font-bold">IPFS CID:</span><br />
                 {uploadResult.cid}
               </p>
+            )}
+            {verifyUrl && (
+              <p className="text-xs font-mono mt-2">
+                <span className="font-bold">Consumer Verify URL:</span><br />
+                {verifyUrl}
+              </p>
+            )}
+            {verifyUrl && (
+              <div className="mt-3 border border-govt-border bg-white p-3">
+                <p className="text-xs font-bold text-govt-blue mb-2">QR Preview</p>
+                <div className="flex flex-wrap gap-3 items-start">
+                  {verifyQrDataUrl ? (
+                    <img
+                      src={verifyQrDataUrl}
+                      alt="Consumer verification QR"
+                      width={150}
+                      height={150}
+                    />
+                  ) : (
+                    <div className="h-[150px] w-[150px] border border-govt-border bg-govt-gray-light flex items-center justify-center text-xs text-govt-gray-dark">
+                      Generating...
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void copyVerifyLink()}
+                      className="govt-btn govt-btn-secondary"
+                    >
+                      Copy Verify Link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={downloadQr}
+                      className="govt-btn govt-btn-primary"
+                    >
+                      Download QR
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 

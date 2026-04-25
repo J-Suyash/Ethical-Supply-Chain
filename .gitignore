@@ -10,3 +10,23 @@ typechain-types
 .env.local
 !.env.production
 bun.lock
+
+# Local agent/tooling artifacts
+.agents/
+.claude/
+.factory/
+.kiro/
+.qwen/
+.windsurf/
+.tmp/
+
+# Generated exports and temporary outputs
+docs_export/
+debug.network-response
+texput.log
+PROJECT_SUMMARY.md
+REVISION_COMPLETE.txt
+
+# Local research build artifacts
+DOCs/latex/
+DOCs/uml_diagrams/
